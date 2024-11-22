@@ -28,4 +28,3 @@ Dev setup:
     ```
 
     This will auto-lint and reformat the file on save.
-3. Kanban board for project tracking can be found here: <https://gokanban.io/423d3501cc>
