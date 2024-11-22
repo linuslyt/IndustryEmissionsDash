@@ -5,3 +5,27 @@ A dashboard to visualize the ['Supply Chain Greenhouse Gas Emission Factors v1.3
 Final project for ECS 272 - Information Visualization at UC Davis, Fall 2024.
 
 Created by Linus Lam and Mahima Rudrapati.
+
+---
+
+Dev setup:
+
+1. Install [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) extensions in VSCode.
+2. Open User Settings JSON (`Cmd+Shift+P` or `Ctrl+Shift+P` > `Preferences: Open User Settings (JSON)`) and append the following:
+
+    ```
+    "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+    "prettier.requireConfig": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.organizeImports": "always",
+        "source.fixAll": "explicit"
+    },
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
+
+    ```
+
+    This will auto-lint and reformat the file on save.
+3. Kanban board for project tracking can be found here: <https://gokanban.io/423d3501cc>
