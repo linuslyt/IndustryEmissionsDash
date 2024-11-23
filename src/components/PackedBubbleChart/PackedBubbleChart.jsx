@@ -68,7 +68,7 @@ function PackedBubbleChart({ data }) {
       .join('circle')
       .attr('cx', (d) => d.x)
       .attr('cy', (d) => d.y)
-      .attr('r', (d) => d.r - 1) // shave off stroke width to prevent clipping
+      .attr('r', (d) => Math.max(d.r - 1, 0)) // shave off stroke width to prevent clipping
       .attr('fill', (d) =>
         // TODO: color nodes by NAICS level
         d.data[0] ? (d.children ? '#69b3a2' : '#ffcc00') : 'none',
