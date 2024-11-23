@@ -20,13 +20,16 @@
 }
 
 .main-grid {
-  padding: 20px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   grid-area: mn;
   background-color: ghostwhite;
+  padding: 10px;
+  margin: 0px;
+  /* Prevents infinite loop on resize */
+  overflow: hidden; 
 }
 
 .sidebar-grid {

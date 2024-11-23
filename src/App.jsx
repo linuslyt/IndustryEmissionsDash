@@ -9,14 +9,18 @@ function App() {
     allEmissions: null,
     equivEmissions: null,
   });
+
   // TODO: Context/state for selected data
   // TODO: Compute derived data here e.g. emissions by sector/industry/gas
-
   useEffect(() => {
     const readCSV = async () => {
       const colMapper = (r) => {
         return {
           naics: r[COLUMN_NAMES.NAICS],
+          sector: r[COLUMN_NAMES.NAICS].slice(0, 2).padEnd(6, '0'),
+          subsector: r[COLUMN_NAMES.NAICS].slice(0, 3).padEnd(6, '0'),
+          indGroup: r[COLUMN_NAMES.NAICS].slice(0, 4).padEnd(6, '0'),
+          industry: r[COLUMN_NAMES.NAICS].slice(0, 5).padEnd(6, '0'),
           title: r[COLUMN_NAMES.NAICS_TITLE],
           ghg: r[COLUMN_NAMES.GHG],
           unit: r[COLUMN_NAMES.UNIT],
@@ -50,10 +54,10 @@ function App() {
   }, []);
 
   useEffect(() => {
-    console.log(
-      `Loaded ${data.allEmissions?.length || 0} allEmissions rows and ${data.equivEmissions?.length || 0} equivEmissions rows.`,
-    );
-    data.allEmissions && console.log(data);
+    // console.log(
+    //   `Loaded ${data.allEmissions?.length || 0} allEmissions rows and ${data.equivEmissions?.length || 0} equivEmissions rows.`,
+    // );
+    // data.allEmissions && console.log(data);
   }, [data]);
 
   return (
@@ -63,7 +67,7 @@ function App() {
           <h1>Header ribbon</h1>
         </div>
         <div className="main-grid">
-          <PackedBubbleChart data={data} />
+          <PackedBubbleChart data={data.equivEmissions} />
         </div>
         <div className="sidebar-grid">
           <div className="sidebar-item">
