@@ -42,12 +42,6 @@ function PackedBubbleChart({ data }) {
     };
   }, [handleResize]);
 
-  useEffect(() => {
-    // console.log('rerendering');
-    d3.select('#packed-bubble-chart').selectAll('*').remove();
-    renderGraph();
-  }, [data, size]);
-
   const renderGraph = () => {
     if (!hierarchyData) return;
     if (size.width === 0) return;
@@ -56,11 +50,14 @@ function PackedBubbleChart({ data }) {
     pack(root);
     // console.log(size.width, size.height);
     console.log(root);
-    const svg = d3
+    const svgRoot = d3
       .select('#packed-bubble-chart')
       .attr('width', size.width)
       .attr('height', size.height)
       .attr('viewbox', `0 0 ${size.width} ${size.height}`);
+
+    // Additional nesting level to prevent jitters while panning. See https://stackoverflow.com/questions/10988445/d3-behavior-zoom-jitters-shakes-jumps-and-bounces-when-dragging
+    const svg = svgRoot.append('g').attr('id', 'zoom-container');
 
     svg
       .selectAll('circle')
@@ -71,10 +68,11 @@ function PackedBubbleChart({ data }) {
       .attr('r', (d) => Math.max(d.r - 1, 0)) // shave off stroke width to prevent clipping
       .attr('fill', (d) =>
         // TODO: color nodes by NAICS level
-        d.data[0] ? (d.children ? '#69b3a2' : '#ffcc00') : 'none',
+        d.data[0] ? (d.children ? '#69b3a2' : '#ffcc00') : 'ghostwhite',
       )
-      .attr('stroke', (d) => (d.data[0] ? 'black' : 'none'))
-      .attr('stroke-width', 1);
+      .attr('stroke', (d) => (d.data[0] ? 'black' : 'ghostwhite'))
+      .attr('stroke-width', 1)
+      .on('click', (e, d) => zoomAndCenterBubble(d));
 
     // Add labels to leaf nodes
     svg
@@ -87,7 +85,44 @@ function PackedBubbleChart({ data }) {
       .attr('dy', '0.3em')
       .text((d) => d.data[0]) // TODO: change to sector label. Get mappings from .xlsx in /data
       .style('font-size', (d) => d.r / 4); // Scale font size based on radius
+
+    return svgRoot;
   };
+
+  function zoomAndCenterBubble(b) {
+    console.log('zooming to bubble', b);
+    const x = b.x;
+    const y = b.y;
+    const r = b.r;
+
+    const scale = Math.min(size.width, size.height) / (r * 2);
+    const dx = size.width / 2 - x * scale;
+    const dy = size.height / 2 - y * scale;
+
+    svgRoot
+      .transition()
+      .duration(500)
+      .call(zoom.transform, d3.zoomIdentity.translate(dx, dy).scale(scale));
+  }
+
+  const svgRoot = useMemo(() => {
+    // console.log('rerendering');
+    d3.select('#packed-bubble-chart').selectAll('*').remove();
+    return renderGraph();
+  }, [data, size]);
+
+  const zoom = useMemo(() => {
+    if (!svgRoot) return;
+    const zoom = d3
+      .zoom()
+      .scaleExtent([0.5, 50])
+      .on('zoom', (e) =>
+        d3.select('#zoom-container').attr('transform', e.transform),
+      );
+
+    svgRoot.call(zoom);
+    return zoom;
+  }, [svgRoot]);
 
   return (
     <>
