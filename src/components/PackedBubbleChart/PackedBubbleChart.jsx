@@ -84,7 +84,9 @@ function PackedBubbleChart({ data }) {
       .attr('text-anchor', 'middle')
       .attr('dy', '0.3em')
       .text((d) => d.data[0]) // TODO: change to sector label. Get mappings from .xlsx in /data
-      .style('font-size', (d) => d.r / 4); // Scale font size based on radius
+      .style('font-size', (d) => d.r / 4)
+      .style('display', (d) => (d.r / 4 > 10 ? 'block' : 'none'))
+      .style('display'); // Scale font size based on radius
 
     return svgRoot;
   };
@@ -116,9 +118,18 @@ function PackedBubbleChart({ data }) {
     const zoom = d3
       .zoom()
       .scaleExtent([0.5, 50])
-      .on('zoom', (e) =>
-        d3.select('#zoom-container').attr('transform', e.transform),
-      );
+      .on('zoom', (e) => {
+        d3.select('#zoom-container').attr('transform', e.transform);
+        // Scale borders by inverse of zoom scale so the stroke width is constant.
+        // e.transform.k represents the scale factor k.
+        d3.selectAll('circle').style('stroke-width', 1 / e.transform.k);
+        d3.selectAll('text')
+          .transition()
+          .duration(1000)
+          .style('display', (d) =>
+            (e.transform.k * d.r) / 4 > 10 ? 'block' : 'none',
+          );
+      });
 
     svgRoot.call(zoom);
     return zoom;
