@@ -7,6 +7,7 @@ import './index.css';
 function PackedBubbleChart({ data }) {
   // TODO: Prototype packed bubble chart.
   //       See https://observablehq.com/@d3/pack/2 and d3.pack(), d3.hierarchy().
+  const FONT_SIZE_CUTOFF = 16;
   const hierarchyData = useMemo(() => {
     if (isEmpty(data)) return;
     const emissionsBySector = d3.rollup(
@@ -18,12 +19,29 @@ function PackedBubbleChart({ data }) {
       (d) => d.industry,
       (d) => d.naics,
     );
+
     const root = d3
       .hierarchy(emissionsBySector, ([, value]) =>
         value instanceof Map ? Array.from(value.entries()) : null,
       )
       .sum(([key, value]) => (typeof value === 'number' ? value : 0))
       .sort((a, b) => b.value - a.value);
+
+    function flattenSingleChildren(node) {
+      if (!node || !node.children) return;
+      if (node.children.length === 1) {
+        const c = node.children[0];
+        flattenSingleChildren(c);
+        node.data = c.data;
+        node.height = c.height;
+        node.depth = c.depth;
+        node.children = c.children;
+      } else {
+        node.children.forEach(flattenSingleChildren);
+      }
+    }
+
+    flattenSingleChildren(root);
     return root;
   }, [data]);
 
@@ -45,7 +63,7 @@ function PackedBubbleChart({ data }) {
   const renderGraph = () => {
     if (!hierarchyData) return;
     if (size.width === 0) return;
-    const pack = d3.pack().size([size.width, size.height]).padding(10);
+    const pack = d3.pack().size([size.width, size.height]).padding(1);
     const root = hierarchyData.copy();
     pack(root);
     // console.log(size.width, size.height);
@@ -85,8 +103,9 @@ function PackedBubbleChart({ data }) {
       .attr('dy', '0.3em')
       .text((d) => d.data[0]) // TODO: change to sector label. Get mappings from .xlsx in /data
       .style('font-size', (d) => d.r / 4)
-      .style('display', (d) => (d.r / 4 > 10 ? 'block' : 'none'))
+      .style('display', (d) => (d.r / 4 > FONT_SIZE_CUTOFF ? 'block' : 'none'))
       .style('display'); // Scale font size based on radius
+    // TODO: add selected bubble state + hide labels where depth < selectedBubble.depth
 
     return svgRoot;
   };
@@ -127,7 +146,7 @@ function PackedBubbleChart({ data }) {
           .transition()
           .duration(1000)
           .style('display', (d) =>
-            (e.transform.k * d.r) / 4 > 10 ? 'block' : 'none',
+            (e.transform.k * d.r) / 4 > FONT_SIZE_CUTOFF ? 'block' : 'none',
           );
       });
 
