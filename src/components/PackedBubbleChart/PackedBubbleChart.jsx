@@ -7,8 +7,9 @@ import './index.css';
 // TODO: add buttons for return to root/recenter at selected node in corner
 // TODO: add hover highlight/drop shadow to border
 
-function PackedBubbleChart({ data }) {
-  const [selectedBubble, setSelectedBubble] = useState(root);
+function PackedBubbleChart({ data, labels }) {
+  // console.log(labels?.get('11'));
+  const [selectedBubble, setSelectedBubble] = useState(root); // TODO: hoist into react context to allow for use in other components
   const bubbleDisplayed = (d) => d.depth <= selectedBubble.depth + 1;
   const labelDisplayed = (d) => d.depth === selectedBubble.depth + 1;
   const hierarchyData = useMemo(() => {
@@ -111,8 +112,10 @@ function PackedBubbleChart({ data }) {
       .attr('y', (d) => d.y)
       .attr('text-anchor', 'middle')
       .attr('dy', '0.3em')
-      .text((d) => d.data[0]) // TODO: change to sector label. Get mappings from .xlsx in /data. Make it a tooltip when font size is too small.
-      .attr('font-size', (d) => d.r / 4)
+      // TODO: Make naics code a tooltip
+      // TODO: Add text wrapping so labels don't overflow bubbles. See https://stackoverflow.com/questions/4991171/auto-line-wrapping-in-svg-text
+      .text((d) => labels.get(d.data[0]))
+      .attr('font-size', (d) => d.r / 8)
       .attr('opacity', (d) => (labelDisplayed(d) ? 100 : 0))
       .attr('pointer-events', 'none'); // make labels click-through
     return svgRoot;
@@ -120,7 +123,7 @@ function PackedBubbleChart({ data }) {
 
   function zoomAndCenterBubble(b) {
     setSelectedBubble(b);
-    // console.log('zooming to bubble', b);
+    console.log('zooming to bubble', b);
     const x = b.x;
     const y = b.y;
     const r = b.r;
