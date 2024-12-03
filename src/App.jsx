@@ -2,34 +2,44 @@ import * as d3 from 'd3';
 import { useEffect, useState } from 'react';
 import './App.css';
 import PackedBubbleChart from './components/PackedBubbleChart/PackedBubbleChart';
-import StackedBarChart from './components/StackedBarChart/StackedBarChart';
-import { COLUMN_NAMES, DATAFILES } from './consts';
+import {
+  DATAFILES,
+  EMISSIONS_COLUMN_NAMES,
+  LABEL_COLUMN_NAMES,
+} from './consts';
 
 function App() {
   const [data, setData] = useState({
     allEmissions: null,
     equivEmissions: null,
+    labels: null,
   });
 
   // TODO: Context/state for selected data
   // TODO: Compute derived data here e.g. emissions by sector/industry/gas
   useEffect(() => {
     const readCSV = async () => {
-      const colMapper = (r) => {
+      const emissionsColMapper = (r) => {
         return {
-          naics: r[COLUMN_NAMES.NAICS],
-          sector: r[COLUMN_NAMES.NAICS].slice(0, 2).padEnd(6, '0'),
-          subsector: r[COLUMN_NAMES.NAICS].slice(0, 3).padEnd(6, '0'),
-          indGroup: r[COLUMN_NAMES.NAICS].slice(0, 4).padEnd(6, '0'),
-          industry: r[COLUMN_NAMES.NAICS].slice(0, 5).padEnd(6, '0'),
-          title: r[COLUMN_NAMES.NAICS_TITLE],
-          ghg: r[COLUMN_NAMES.GHG],
-          unit: r[COLUMN_NAMES.UNIT],
-          base: +r[COLUMN_NAMES.BASE_EMISSIONS],
-          margins: +r[COLUMN_NAMES.MARGINS_EMISSIONS],
-          total: +r[COLUMN_NAMES.TOTAL_EMISSIONS],
-          useeio: r[COLUMN_NAMES.USEEIO],
+          naics: r[EMISSIONS_COLUMN_NAMES.NAICS],
+          sector: r[EMISSIONS_COLUMN_NAMES.NAICS].slice(0, 2).padEnd(6, '0'),
+          subsector: r[EMISSIONS_COLUMN_NAMES.NAICS].slice(0, 3).padEnd(6, '0'),
+          indGroup: r[EMISSIONS_COLUMN_NAMES.NAICS].slice(0, 4).padEnd(6, '0'),
+          industry: r[EMISSIONS_COLUMN_NAMES.NAICS].slice(0, 5).padEnd(6, '0'),
+          title: r[EMISSIONS_COLUMN_NAMES.NAICS_TITLE],
+          ghg: r[EMISSIONS_COLUMN_NAMES.GHG],
+          unit: r[EMISSIONS_COLUMN_NAMES.UNIT],
+          base: +r[EMISSIONS_COLUMN_NAMES.BASE_EMISSIONS],
+          margins: +r[EMISSIONS_COLUMN_NAMES.MARGINS_EMISSIONS],
+          total: +r[EMISSIONS_COLUMN_NAMES.TOTAL_EMISSIONS],
+          useeio: r[EMISSIONS_COLUMN_NAMES.USEEIO],
         };
+      };
+      const labelsColMapper = (r) => {
+        return [
+          r[LABEL_COLUMN_NAMES.NAICS].padEnd(6, '0'),
+          r[LABEL_COLUMN_NAMES.TITLE],
+        ];
       };
 
       try {
@@ -37,15 +47,21 @@ function App() {
         const PATH_TO_DATA = '../data/';
         const allEmissionsData = await d3.csv(
           PATH_TO_DATA + DATAFILES.ALL_EMISSIONS,
-          colMapper,
+          emissionsColMapper,
         );
         const equivCO2EmissionsData = await d3.csv(
           PATH_TO_DATA + DATAFILES.EQUIV_CO2_EMISSIONS,
-          colMapper,
+          emissionsColMapper,
+        );
+        const naicsLabels = await d3.csv(
+          PATH_TO_DATA + DATAFILES.NAICS_LABELS,
+          labelsColMapper,
         );
         setData({
+          // TODO: hoist into react context to allow for use in other components
           allEmissions: allEmissionsData,
           equivEmissions: equivCO2EmissionsData,
+          naicsLabels: new Map(naicsLabels),
         });
       } catch (error) {
         console.error('Error loading CSV:', error);
@@ -68,7 +84,10 @@ function App() {
           <h1>Header ribbon</h1>
         </div>
         <div className="main-grid">
-          <PackedBubbleChart data={data.equivEmissions} />
+          <PackedBubbleChart
+            data={data.equivEmissions}
+            labels={data.naicsLabels}
+          />
         </div>
         <div className="sidebar-grid">
           <div className="sidebar-item">

@@ -1,6 +1,11 @@
 .main-container {
   width: 100%;
   height: 100%;
+  border-width: 2px;
+  border-style: solid;
+  border-color: ghostwhite;
+  border-radius: 15px;
+  overflow: hidden;
 }
 
 .chart-container {
