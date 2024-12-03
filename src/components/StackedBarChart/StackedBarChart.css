@@ -1,0 +1,18 @@
+.bar-chart-container {
+    position: relative;
+    width: 100%;
+  }
+  
+  .layer rect:hover {
+    opacity: 0.8;
+  }
+  
+  .axis text {
+    font-size: 12px;
+  }
+  
+  .axis path,
+  .axis line {  
+    stroke: #ccc;
+  }
+  

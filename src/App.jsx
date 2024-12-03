@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import { useEffect, useState } from 'react';
 import './App.css';
 import PackedBubbleChart from './components/PackedBubbleChart/PackedBubbleChart';
+import StackedBarChart from './components/StackedBarChart/StackedBarChart';
 import { COLUMN_NAMES, DATAFILES } from './consts';
 
 function App() {
@@ -67,17 +68,18 @@ function App() {
           <h1>Header ribbon</h1>
         </div>
         <div className="main-grid">
-          <PackedBubbleChart data={data.equivEmissions} />
+          <PackedBubbleChart data={data.equivEmissions} />  
         </div>
         <div className="sidebar-grid">
           <div className="sidebar-item">
-            <h2>Sidebar header</h2>
+            <h2>Gas Emissions by Sector</h2>
           </div>
-          <div className="sidebar-item">Sidebar item 1</div>
+          <div className="sidebar-item">
+             <StackedBarChart data={data.equivEmissions} />
+          </div>
           <div className="sidebar-item">Sidebar item 2</div>
-          <div className="sidebar-item">Sidebar item 3</div>
         </div>
-      </div>
+        </div>
     </>
   );
 }

@@ -39,7 +39,7 @@
   grid-area: sd;
   grid-template-rows: 100px repeat(3, 1fr); /* 4 equal height rows */
   row-gap: 20px;
-  background-color: lightcoral
+  background-color: darkgray;
 }
 
 .sidebar-item {
