@@ -91,11 +91,12 @@ function App() {
         </div>
         <div className="sidebar-grid">
           <div className="sidebar-item">
-            <h2>Sidebar header</h2>
+            <h2>Gas Emissions by Sector</h2>
           </div>
-          <div className="sidebar-item">Sidebar item 1</div>
+          <div className="sidebar-item">
+            <StackedBarChart data={data.equivEmissions} />
+          </div>
           <div className="sidebar-item">Sidebar item 2</div>
-          <div className="sidebar-item">Sidebar item 3</div>
         </div>
       </div>
     </>
