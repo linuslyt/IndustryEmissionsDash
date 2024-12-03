@@ -68,18 +68,18 @@ function App() {
           <h1>Header ribbon</h1>
         </div>
         <div className="main-grid">
-          <PackedBubbleChart data={data.equivEmissions} />  
+          <PackedBubbleChart data={data.equivEmissions} />
         </div>
         <div className="sidebar-grid">
           <div className="sidebar-item">
             <h2>Gas Emissions by Sector</h2>
           </div>
           <div className="sidebar-item">
-             <StackedBarChart data={data.equivEmissions} />
+            <StackedBarChart data={data.equivEmissions} />
           </div>
           <div className="sidebar-item">Sidebar item 2</div>
         </div>
-        </div>
+      </div>
     </>
   );
 }
