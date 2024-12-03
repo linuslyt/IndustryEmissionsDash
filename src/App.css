@@ -1,11 +1,11 @@
-/* Background colors are placeholder for easier viewing */
 .root-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* Changed from four equal columns to three 20% and one 40% */
+  grid-template-columns: 20% 20% 25% 35%;
   grid-template-rows: 100px auto;
   grid-template-areas:
-  "hd hd hd hd"
-  "mn mn mn sd";
+    "hd hd hd hd"
+    "mn mn mn sd";
   height: 100vh;
   width: 100vw;
 }
@@ -28,16 +28,19 @@
   background-color: ghostwhite;
   padding: 10px;
   margin: 0px;
-  /* Prevents infinite loop on resize */
+  width: 100%; 
+  height: 100%;
   overflow: hidden; 
 }
 
 .sidebar-grid {
   padding: 20px;
   height: 100%;
-  display: grid;
+  width: 100%; 
+  display: flex;
+  flex-direction: column;
   grid-area: sd;
-  grid-template-rows: 100px repeat(3, 1fr); /* 4 equal height rows */
+  grid-template-rows: 100px repeat(3, 1fr); 
   row-gap: 20px;
   background-color: darkgray;
 }
@@ -45,7 +48,7 @@
 .sidebar-item {
   padding: 10px;
   /* height: 100%; */
-  /* width: 100%; */
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
