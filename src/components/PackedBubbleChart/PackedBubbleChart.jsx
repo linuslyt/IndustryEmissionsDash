@@ -4,9 +4,14 @@ import { debounce, isEmpty } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.css';
 
-function PackedBubbleChart({ data }) {
-  // TODO: Prototype packed bubble chart.
-  //       See https://observablehq.com/@d3/pack/2 and d3.pack(), d3.hierarchy().
+// TODO: add buttons for return to root/recenter at selected node in corner
+// TODO: add hover highlight/drop shadow to border
+
+function PackedBubbleChart({ data, labels }) {
+  // console.log(labels?.get('11'));
+  const [selectedBubble, setSelectedBubble] = useState(root); // TODO: hoist into react context to allow for use in other components
+  const bubbleDisplayed = (d) => d.depth <= selectedBubble.depth + 1;
+  const labelDisplayed = (d) => d.depth === selectedBubble.depth + 1;
   const hierarchyData = useMemo(() => {
     if (isEmpty(data)) return;
     const emissionsBySector = d3.rollup(
@@ -18,12 +23,30 @@ function PackedBubbleChart({ data }) {
       (d) => d.industry,
       (d) => d.naics,
     );
+
     const root = d3
       .hierarchy(emissionsBySector, ([, value]) =>
         value instanceof Map ? Array.from(value.entries()) : null,
       )
       .sum(([key, value]) => (typeof value === 'number' ? value : 0))
       .sort((a, b) => b.value - a.value);
+
+    function flattenSingleChildren(node) {
+      if (!node || !node.children) return;
+      if (node.children.length === 1) {
+        const c = node.children[0];
+        flattenSingleChildren(c);
+        node.data = c.data;
+        node.height = c.height;
+        node.depth = c.depth;
+        node.children = c.children;
+      } else {
+        node.children.forEach(flattenSingleChildren);
+      }
+    }
+
+    flattenSingleChildren(root);
+    setSelectedBubble(root);
     return root;
   }, [data]);
 
@@ -42,27 +65,26 @@ function PackedBubbleChart({ data }) {
     };
   }, [handleResize]);
 
-  useEffect(() => {
-    // console.log('rerendering');
-    d3.select('#packed-bubble-chart').selectAll('*').remove();
-    renderGraph();
-  }, [data, size]);
-
   const renderGraph = () => {
     if (!hierarchyData) return;
     if (size.width === 0) return;
-    const pack = d3.pack().size([size.width, size.height]).padding(10);
+    const pack = d3.pack().size([size.width, size.height]).padding(1);
     const root = hierarchyData.copy();
     pack(root);
     // console.log(size.width, size.height);
-    console.log(root);
-    const svg = d3
+    // console.log(root);
+    const svgRoot = d3
       .select('#packed-bubble-chart')
       .attr('width', size.width)
       .attr('height', size.height)
       .attr('viewbox', `0 0 ${size.width} ${size.height}`);
 
+    // Additional nesting level to prevent jitters while panning. See https://stackoverflow.com/questions/10988445/d3-behavior-zoom-jitters-shakes-jumps-and-bounces-when-dragging
+    const svg = svgRoot.append('g').attr('id', 'zoom-container');
+
     svg
+      .append('g')
+      .attr('id', 'bubbles')
       .selectAll('circle')
       .data(root.descendants())
       .join('circle')
@@ -70,14 +92,19 @@ function PackedBubbleChart({ data }) {
       .attr('cy', (d) => d.y)
       .attr('r', (d) => Math.max(d.r - 1, 0)) // shave off stroke width to prevent clipping
       .attr('fill', (d) =>
-        // TODO: color nodes by NAICS level
-        d.data[0] ? (d.children ? '#69b3a2' : '#ffcc00') : 'none',
+        // TODO: color nodes by depth. If no children set opacity to 0 and display pie chart instead.
+        d.data[0] ? (d.children ? '#69b3a2' : '#ffcc00') : 'ghostwhite',
       )
-      .attr('stroke', (d) => (d.data[0] ? 'black' : 'none'))
-      .attr('stroke-width', 1);
+      .attr('opacity', (d) => (bubbleDisplayed(d) ? 100 : 0))
+      .attr('pointer-events', (d) => (bubbleDisplayed(d) ? 'auto' : 'none'))
+      .attr('stroke', (d) => (d.data[0] ? 'black' : 'ghostwhite'))
+      .attr('stroke-width', 1)
+      .on('click', (e, d) => zoomAndCenterBubble(d));
 
     // Add labels to leaf nodes
     svg
+      .append('g')
+      .attr('id', 'bubble-labels')
       .selectAll('text')
       .data(root.descendants())
       .join('text')
@@ -85,9 +112,72 @@ function PackedBubbleChart({ data }) {
       .attr('y', (d) => d.y)
       .attr('text-anchor', 'middle')
       .attr('dy', '0.3em')
-      .text((d) => d.data[0]) // TODO: change to sector label. Get mappings from .xlsx in /data
-      .style('font-size', (d) => d.r / 4); // Scale font size based on radius
+      // TODO: Make naics code a tooltip
+      // TODO: Add text wrapping so labels don't overflow bubbles. See https://stackoverflow.com/questions/4991171/auto-line-wrapping-in-svg-text
+      .text((d) => labels.get(d.data[0]))
+      .attr('font-size', (d) => d.r / 8)
+      .attr('opacity', (d) => (labelDisplayed(d) ? 100 : 0))
+      .attr('pointer-events', 'none'); // make labels click-through
+    return svgRoot;
   };
+
+  function zoomAndCenterBubble(b) {
+    setSelectedBubble(b);
+    console.log('zooming to bubble', b);
+    const x = b.x;
+    const y = b.y;
+    const r = b.r;
+
+    const scale = Math.min(size.width, size.height) / (r * 2);
+    const dx = size.width / 2 - x * scale;
+    const dy = size.height / 2 - y * scale;
+
+    svgRoot
+      .transition()
+      .duration(500)
+      .call(zoom.transform, d3.zoomIdentity.translate(dx, dy).scale(scale));
+  }
+
+  useEffect(() => {
+    d3.select('#bubbles')
+      .selectAll('circle')
+      .transition()
+      .duration(500)
+      .attr('opacity', (d) => (bubbleDisplayed(d) ? 100 : 0))
+      .attr('pointer-events', (d) => (bubbleDisplayed(d) ? 'auto' : 'none'));
+
+    d3.select('#bubble-labels')
+      .selectAll('text')
+      .transition()
+      .duration(250)
+      .attr('opacity', (d) => (labelDisplayed(d) ? 100 : 0));
+  }, [selectedBubble]);
+
+  const svgRoot = useMemo(() => {
+    // console.log('rerendering');
+    d3.select('#packed-bubble-chart').selectAll('*').remove();
+    return renderGraph();
+  }, [data, size]);
+
+  const zoom = useMemo(() => {
+    if (!svgRoot) return;
+    const zoom = d3
+      .zoom()
+      .scaleExtent([0.5, 50])
+      // TODO: smooth zoom even more. See https://observablehq.com/@d3/programmatic-zoom
+      .on('zoom', (e) => {
+        d3.select('#zoom-container').attr('transform', e.transform);
+        // Scale borders by inverse of zoom scale so the stroke width is constant.
+        // e.transform.k represents the scale factor k.
+        d3.select('#bubbles')
+          .selectAll('circle')
+          .attr('stroke-width', 1 / e.transform.k);
+      });
+
+    svgRoot.call(zoom);
+    // .on('wheel.zoom', null);
+    return zoom;
+  }, [svgRoot]);
 
   return (
     <>
