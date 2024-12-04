@@ -5,13 +5,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './index.css';
 
 // TODO: add buttons for return to root/recenter at selected node in corner
-// TODO: add hover highlight/drop shadow to border
+// TODO: If no children set opacity to 0 and display pie chart instead.
 
 function PackedBubbleChart({ data, labels }) {
   // console.log(labels?.get('11'));
   const [selectedBubble, setSelectedBubble] = useState(root); // TODO: hoist into react context to allow for use in other components
   const bubbleDisplayed = (d) => d.depth <= selectedBubble.depth + 1;
-  const labelDisplayed = (d) => d.depth === selectedBubble.depth + 1;
+  const labelDisplayed = (d) => d.depth === selectedBubble.depth + 1; // TODO: hide if font size < 1. move to tooltip.
+  const color = d3
+    .scaleLinear()
+    .domain([0, 5])
+    .range(['hsl(152,80%,80%)', 'hsl(228,30%,40%)']) // TODO: placeholder color scheme. replace as necessary
+    .interpolate(d3.interpolateHcl);
+
   const hierarchyData = useMemo(() => {
     if (isEmpty(data)) return;
     const emissionsBySector = d3.rollup(
@@ -82,7 +88,7 @@ function PackedBubbleChart({ data, labels }) {
     // Additional nesting level to prevent jitters while panning. See https://stackoverflow.com/questions/10988445/d3-behavior-zoom-jitters-shakes-jumps-and-bounces-when-dragging
     const svg = svgRoot.append('g').attr('id', 'zoom-container');
 
-    svg
+    const bubbles = svg
       .append('g')
       .attr('id', 'bubbles')
       .selectAll('circle')
@@ -91,33 +97,38 @@ function PackedBubbleChart({ data, labels }) {
       .attr('cx', (d) => d.x)
       .attr('cy', (d) => d.y)
       .attr('r', (d) => Math.max(d.r - 1, 0)) // shave off stroke width to prevent clipping
-      .attr('fill', (d) =>
-        // TODO: color nodes by depth. If no children set opacity to 0 and display pie chart instead.
-        d.data[0] ? (d.children ? '#69b3a2' : '#ffcc00') : 'ghostwhite',
-      )
+      .attr('fill', (d) => color(d.depth))
       .attr('opacity', (d) => (bubbleDisplayed(d) ? 100 : 0))
       .attr('pointer-events', (d) => (bubbleDisplayed(d) ? 'auto' : 'none'))
-      .attr('stroke', (d) => (d.data[0] ? 'black' : 'ghostwhite'))
+      .on('mouseover', function () {
+        d3.select(this).attr('stroke', '#000');
+      })
+      .on('mouseout', function () {
+        d3.select(this).attr('stroke', 'none');
+      })
       .attr('stroke-width', 1)
       .on('click', (e, d) => zoomAndCenterBubble(d));
 
     // Add labels to leaf nodes
-    svg
+    const labelDivs = svg
       .append('g')
-      .attr('id', 'bubble-labels')
-      .selectAll('text')
+      .attr('id', 'labels')
+      .selectAll('foreignObject')
       .data(root.descendants())
-      .join('text')
-      .attr('x', (d) => d.x)
-      .attr('y', (d) => d.y)
-      .attr('text-anchor', 'middle')
-      .attr('dy', '0.3em')
-      // TODO: Make naics code a tooltip
-      // TODO: Add text wrapping so labels don't overflow bubbles. See https://stackoverflow.com/questions/4991171/auto-line-wrapping-in-svg-text
-      .text((d) => labels.get(d.data[0]))
-      .attr('font-size', (d) => d.r / 8)
-      .attr('opacity', (d) => (labelDisplayed(d) ? 100 : 0))
-      .attr('pointer-events', 'none'); // make labels click-through
+      .join('foreignObject')
+      .attr('x', (d) => d.x - d.r)
+      .attr('y', (d) => d.y - d.r)
+      .attr('width', (d) => d.r * 2)
+      .attr('height', (d) => d.r * 2)
+      .attr('pointer-events', 'none')
+      .attr('display', (d) => (labelDisplayed(d) ? 'auto' : 'none'));
+
+    // TODO: Make naics code a tooltip
+    labelDivs
+      .append('xhtml:div')
+      .attr('class', 'label-div')
+      .style('font-size', (d) => `${d.r / 6}px`)
+      .text((d) => labels.get(d.data[0])); // make labels click-through
     return svgRoot;
   };
 
@@ -146,11 +157,11 @@ function PackedBubbleChart({ data, labels }) {
       .attr('opacity', (d) => (bubbleDisplayed(d) ? 100 : 0))
       .attr('pointer-events', (d) => (bubbleDisplayed(d) ? 'auto' : 'none'));
 
-    d3.select('#bubble-labels')
-      .selectAll('text')
+    d3.select('#labels')
+      .selectAll('foreignObject')
       .transition()
       .duration(250)
-      .attr('opacity', (d) => (labelDisplayed(d) ? 100 : 0));
+      .attr('display', (d) => (labelDisplayed(d) ? 'auto' : 'none'));
   }, [selectedBubble]);
 
   const svgRoot = useMemo(() => {
@@ -172,6 +183,9 @@ function PackedBubbleChart({ data, labels }) {
         d3.select('#bubbles')
           .selectAll('circle')
           .attr('stroke-width', 1 / e.transform.k);
+        d3.select('#labels')
+          .selectAll('text')
+          .style('font-size', (d) => `${d.r / 6 / e.transform.k}px`);
       });
 
     svgRoot.call(zoom);
