@@ -6,6 +6,7 @@
   border-color: ghostwhite;
   border-radius: 15px;
   overflow: hidden;
+  position: relative;
 }
 
 .chart-container {

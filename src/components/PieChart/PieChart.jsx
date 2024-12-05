@@ -1,15 +1,22 @@
+import useResizeObserver from '@react-hook/resize-observer';
+import * as d3 from 'd3';
+import { debounce, isEmpty } from 'lodash';
 import React, {
-  useRef,
+  useCallback,
+  useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
-  useCallback,
 } from 'react';
-import * as d3 from 'd3';
-import useResizeObserver from '@react-hook/resize-observer';
-import { debounce, isEmpty } from 'lodash';
+import SelectedDataContext from '../../stores/SelectedDataContext';
+
+// TODO: make this position absolute. stack on top of packed chart.
+// get x, y, r from selected Bubble. pass as prop.
+// get total vs base emission from select. pass as prop.
 
 const PieChart = ({ ghgdata }) => {
+  const { selectedData, setSelectedData } = useContext(SelectedDataContext);
   const svgRef = useRef(null);
   const graphRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -32,14 +39,29 @@ const PieChart = ({ ghgdata }) => {
 
   // Aggregate and filter data to include only gases with slice angle >= 1 degree
   const aggregatedData = useMemo(() => {
-    if (isEmpty(ghgdata)) return [];
+    console.log('repie');
+    if (isEmpty(ghgdata) || !selectedData.terminalNode) return [];
 
-    const predefinedNaicsTitle = '111110';
+    const depthToColumnMap = [
+      'sector',
+      'subsector',
+      'indGroup',
+      'industry',
+      'naics',
+    ];
+
+    const filter =
+      selectedData.depth > 0
+        ? (d) =>
+            d[depthToColumnMap[selectedData.depth - 1]] === selectedData.naics
+        : () => false;
+    console.log(
+      'filtering on column ',
+      depthToColumnMap[selectedData.depth - 1],
+    );
 
     // Filter data
-    const filteredData = ghgdata.filter(
-      (d) => d.naics === predefinedNaicsTitle,
-    );
+    const filteredData = ghgdata.filter(filter);
 
     const emissionsByGHG = filteredData.map((d) => ({
       ghg: d.ghg,
@@ -67,13 +89,12 @@ const PieChart = ({ ghgdata }) => {
     }
 
     return finalData;
-  }, [ghgdata]);
+  }, [ghgdata, selectedData]);
 
   useEffect(() => {
+    d3.select(svgRef.current).selectAll('*').remove();
     if (isEmpty(aggregatedData) || size.width === 0 || size.height === 0)
       return;
-
-    d3.select(svgRef.current).selectAll('*').remove();
 
     const width = size.width;
     const height = size.height;
@@ -131,6 +152,7 @@ const PieChart = ({ ghgdata }) => {
       .attr('stroke', 'white')
       .style('stroke-width', '2px')
       .style('opacity', 1)
+      .style('pointer-events', 'all')
       .on('mouseover', function (event, d) {
         d3.select(this).transition().duration(200).style('opacity', 0.8);
         tooltip.transition().duration(200).style('opacity', 0.9);
@@ -185,7 +207,15 @@ const PieChart = ({ ghgdata }) => {
   return (
     <div
       ref={graphRef}
-      style={{ width: '100%', height: '100%', position: 'relative' }}
+      style={{
+        width: '100%',
+        height: '100%',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        zIndex: 999,
+        pointerEvents: 'none',
+      }}
     >
       <svg ref={svgRef} />
       <style>{`

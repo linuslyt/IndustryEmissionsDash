@@ -13,12 +13,15 @@ import {
 import Select from 'react-select';
 import SelectedDataContext from '../../stores/SelectedDataContext';
 
+import PieChart from '../PieChart/PieChart';
 import './index.css';
 
-// TODO: add buttons for return to root/recenter at selected node in corner
+// TODO: add buttons for return to root/recenter at selected node in corner. make them noop at root level instead of throwing error.
 // TODO: If no children set opacity to 0 and display pie chart instead.
 
-function PackedBubbleChart({ data, labels }) {
+function PackedBubbleChart({ data }) {
+  const { equivEmissions: totalData, naicsLabels: labels } = data;
+
   const [selectedBubble, setSelectedBubble] = useState(null); // TODO: hoist into react context to allow for use in other components
   const { selectedData, setSelectedData } = useContext(SelectedDataContext);
   const bubbleDisplayed = (d) => d.depth <= selectedBubble.depth + 1;
@@ -30,9 +33,9 @@ function PackedBubbleChart({ data, labels }) {
     .interpolate(d3.interpolateHcl);
 
   const hierarchyData = useMemo(() => {
-    if (isEmpty(data)) return;
+    if (isEmpty(totalData)) return;
     const emissionsBySector = d3.rollup(
-      data,
+      totalData,
       (v) => d3.sum(v, (d) => d.total),
       (d) => d.sector,
       (d) => d.subsector,
@@ -65,7 +68,7 @@ function PackedBubbleChart({ data, labels }) {
     flattenSingleChildren(root);
     setSelectedBubble(root);
     return root;
-  }, [data]);
+  }, [totalData]);
 
   useEffect(() => {
     if (!selectedBubble || !selectedBubble.data) return;
@@ -74,6 +77,7 @@ function PackedBubbleChart({ data, labels }) {
       naics: selectedBubble.data[0],
       depth: selectedBubble.depth,
       label: labels.get(selectedBubble.data[0]),
+      terminalNode: !('children' in selectedBubble),
     });
   }, [selectedBubble]);
 
@@ -189,14 +193,13 @@ function PackedBubbleChart({ data, labels }) {
     // console.log('rerendering');
     d3.select('#packed-bubble-chart').selectAll('*').remove();
     return renderGraph();
-  }, [data, size]);
+  }, [totalData, size]);
 
   const zoom = useMemo(() => {
     if (!svgRoot) return;
     const zoom = d3
       .zoom()
-      .scaleExtent([0.5, 50])
-      // TODO: smooth zoom even more. See https://observablehq.com/@d3/programmatic-zoom
+      .scaleExtent([0.5, 150])
       .on('zoom', (e) => {
         d3.select('#zoom-container').attr('transform', e.transform);
         // Scale borders by inverse of zoom scale so the stroke width is constant.
@@ -284,6 +287,7 @@ function PackedBubbleChart({ data, labels }) {
         Go to parent
       </Button>
       <div ref={graphRef} className="main-container">
+        <PieChart ghgdata={data.allEmissions} />
         <svg id="packed-bubble-chart" className="chart-container" />
       </div>
     </>

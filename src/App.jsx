@@ -99,11 +99,8 @@ function App() {
             <h1>Header ribbon</h1>
           </div>
           <div className="main-grid">
-            <PackedBubbleChart
-              data={data.equivEmissions}
-              labels={data.naicsLabels}
-            />
-            {/* <PieChart ghgdata={data.allEmissions}/> The chart only shows for 'Soybean Farming using the code' */}
+            <PackedBubbleChart data={data} />
+            {/* <PieChart ghgdata={data.allEmissions} /> The chart only shows for 'Soybean Farming using the code' */}
           </div>
           <div className="sidebar-grid">
             <div className="sidebar-item">
