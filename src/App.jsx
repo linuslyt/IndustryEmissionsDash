@@ -21,6 +21,7 @@ function App() {
     naics: '',
     depth: 0,
     label: '',
+    selectedEmissions: 'all',
   });
 
   // TODO: Context/state for selected data

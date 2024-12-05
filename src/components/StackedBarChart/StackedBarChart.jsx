@@ -160,6 +160,10 @@ const StackedBarChart = ({ data }) => {
         Hierarchy depth (0 = all industries, 1 = sector, 2 = subsector, etc.):{' '}
         {selectedData.depth}
       </div>
+      <div>
+        Data to display ('margin', 'base', 'all'):{' '}
+        {selectedData.selectedEmissions}
+      </div>
     </div>
   );
 };
