@@ -123,7 +123,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
           (v) => ({
             base: d3.sum(v, (d) => d.base),
             margin: d3.sum(v, (d) => d.margins),
-            label: labels.get(v[0][level]) || 'Unknown Title',
+            label: labels.get(v[0][level]) || 'Unknown GHG',
           }),
           (d) => d[level],
         ),
@@ -207,7 +207,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
     svg
       .attr('width', width)
       .attr('height', height)
-      .attr('viewBox', [0, 0, width, height])
+      .attr('viewBox', [0, -20, width, height])
       .attr('style', 'max-width: 100%; height: auto;');
 
     // Draw the chart
@@ -248,6 +248,19 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
       .attr('transform', `translate(${x.range()[0]},0)`)
       .call(d3.axisLeft(y).tickSizeOuter(0))
       .call((g) => g.selectAll('.domain').remove());
+
+    chart
+      .append('text')
+      .attr('x', (size.width) / 2 + 40)
+      .attr('y', 0)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '14px')
+      .text((d) => {
+        const allGHGlabel = "kg CO2e/2022 USD, purchaser price";
+        const specificGHGlabel = "kg/2022 USD, purchaser price";
+      
+        return selectedData.depth === 4 ? specificGHGlabel : allGHGlabel;
+      })
   }, [
     aggregatedData,
     series,
