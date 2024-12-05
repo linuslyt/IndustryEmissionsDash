@@ -1,13 +1,16 @@
+import useResizeObserver from '@react-hook/resize-observer';
+import * as d3 from 'd3';
+import { debounce, isEmpty } from 'lodash';
 import React, {
-  useRef,
+  useCallback,
+  useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
-  useCallback,
 } from 'react';
-import * as d3 from 'd3';
-import useResizeObserver from '@react-hook/resize-observer';
-import { debounce, isEmpty } from 'lodash';
+import SelectedDataContext from '../../stores/SelectedDataContext.js';
+
 import './StackedBarChart.css';
 
 const StackedBarChart = ({ data }) => {
@@ -18,6 +21,8 @@ const StackedBarChart = ({ data }) => {
   const svgRef = useRef(null);
   const graphRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
+
+  const { selectedData, _ } = useContext(SelectedDataContext);
 
   const handleResize = useCallback(
     debounce((entry) => {
@@ -149,6 +154,16 @@ const StackedBarChart = ({ data }) => {
   return (
     <div ref={graphRef} className="bar-chart-container">
       <svg ref={svgRef} style={{ padding: 0, margin: 0 }}></svg>
+      <div>Selected area: {selectedData.naics}</div>
+      <div>Area title: {selectedData.label}</div>
+      <div>
+        Hierarchy depth (0 = all industries, 1 = sector, 2 = subsector, etc.):{' '}
+        {selectedData.depth}
+      </div>
+      <div>
+        Data to display ('margin', 'base', 'all'):{' '}
+        {selectedData.selectedEmissions}
+      </div>
     </div>
   );
 };

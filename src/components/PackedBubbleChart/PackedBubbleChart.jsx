@@ -1,15 +1,26 @@
+import { Button } from '@mui/material';
 import useResizeObserver from '@react-hook/resize-observer';
 import * as d3 from 'd3';
 import { debounce, isEmpty } from 'lodash';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import Select from 'react-select';
+import SelectedDataContext from '../../stores/SelectedDataContext';
+
 import './index.css';
 
 // TODO: add buttons for return to root/recenter at selected node in corner
 // TODO: If no children set opacity to 0 and display pie chart instead.
 
 function PackedBubbleChart({ data, labels }) {
-  // console.log(labels?.get('11'));
-  const [selectedBubble, setSelectedBubble] = useState(root); // TODO: hoist into react context to allow for use in other components
+  const [selectedBubble, setSelectedBubble] = useState(null); // TODO: hoist into react context to allow for use in other components
+  const { selectedData, setSelectedData } = useContext(SelectedDataContext);
   const bubbleDisplayed = (d) => d.depth <= selectedBubble.depth + 1;
   const labelDisplayed = (d) => d.depth === selectedBubble.depth + 1; // TODO: hide if font size < 1. move to tooltip.
   const color = d3
@@ -55,6 +66,16 @@ function PackedBubbleChart({ data, labels }) {
     setSelectedBubble(root);
     return root;
   }, [data]);
+
+  useEffect(() => {
+    if (!selectedBubble || !selectedBubble.data) return;
+    setSelectedData({
+      ...selectedData,
+      naics: selectedBubble.data[0],
+      depth: selectedBubble.depth,
+      label: labels.get(selectedBubble.data[0]),
+    });
+  }, [selectedBubble]);
 
   const [size, setSize] = useState({ width: 0, height: 0 });
   const graphRef = useRef(null); // When ref is created as null, React will map it to the JSX node it's assigned to on render.
@@ -189,12 +210,79 @@ function PackedBubbleChart({ data, labels }) {
       });
 
     svgRoot.call(zoom);
+    svgRoot.node().zoom = zoom;
     // .on('wheel.zoom', null);
     return zoom;
   }, [svgRoot]);
 
+  // For react-select
+  const selectedEmissionsOptions = [
+    {
+      label: 'Total emissions',
+      value: 'all',
+    },
+    {
+      label: 'Production emissions',
+      value: 'base',
+    },
+    {
+      label: 'Margins emissions',
+      value: 'margin',
+    },
+  ];
+
+  // https://github.com/JedWatson/react-select/issues/4201#issuecomment-874098561
+  const reactSelectStyle = {
+    menu: (base) => ({
+      ...base,
+      width: 'max-content',
+      minWidth: '100%',
+      zIndex: 5,
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,
+    }),
+  };
+
+  const handleReset = () => {
+    svgRoot.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+    setSelectedBubble(hierarchyData);
+  };
   return (
     <>
+      <Select
+        options={selectedEmissionsOptions}
+        value={selectedEmissionsOptions.label}
+        menuPortalTarget={document.body}
+        onChange={(e) =>
+          setSelectedData({ ...selectedData, selectedEmissions: e.value })
+        }
+        styles={reactSelectStyle}
+        defaultValue={selectedEmissionsOptions[0]}
+      />
+      <Button
+        variant="contained"
+        onClick={handleReset}
+        style={{
+          whiteSpace: 'nowrap',
+          minWidth: 'auto',
+          textTransform: 'none',
+        }}
+      >
+        Back to root
+      </Button>
+      <Button
+        variant="contained"
+        onClick={() => zoomAndCenterBubble(selectedBubble.parent)}
+        style={{
+          whiteSpace: 'nowrap',
+          minWidth: 'auto',
+          textTransform: 'none',
+        }}
+      >
+        Go to parent
+      </Button>
       <div ref={graphRef} className="main-container">
         <svg id="packed-bubble-chart" className="chart-container" />
       </div>
