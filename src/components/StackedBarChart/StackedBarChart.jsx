@@ -13,7 +13,7 @@ import SelectedDataContext from '../../stores/SelectedDataContext.js';
 
 import './StackedBarChart.css';
 
-const StackedBarChart = ({ data, ghgdata }) => {
+const StackedBarChart = ({ data, ghgdata, labels }) => {
   const svgRef = useRef(null);
   const graphRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -35,6 +35,7 @@ const StackedBarChart = ({ data, ghgdata }) => {
     };
   }, [handleResize]);
 
+  // Map depth to the corresponding field names
   const map = {
     0: 'sector',
     1: 'subsector',
@@ -108,9 +109,10 @@ const StackedBarChart = ({ data, ghgdata }) => {
         });
       }
 
-      // Map to required structure
+      // Map to required structure with labels
       return finalData.map((d) => ({
         level: d.ghg,
+        label: d.ghg, // Use GHG names as labels
         base: d.base,
         margin: d.margin,
       }));
@@ -121,14 +123,26 @@ const StackedBarChart = ({ data, ghgdata }) => {
           (v) => ({
             base: d3.sum(v, (d) => d.base),
             margin: d3.sum(v, (d) => d.margins),
+            label: labels.get(v[0][level]) || 'Unknown Title',
           }),
           (d) => d[level],
         ),
-        ([levelKey, values]) => ({ level: levelKey, ...values }),
+        ([levelKey, values]) => ({
+          level: levelKey,
+          label: values.label,
+          base: values.base,
+          margin: values.margin,
+        }),
       );
-      return emissionsByLevel;
+
+      // Sort the aggregated data in descending order of total emissions
+      const sortedAggregatedData = emissionsByLevel.sort(
+        (a, b) => b.base + b.margin - (a.base + a.margin),
+      );
+
+      return sortedAggregatedData;
     }
-  }, [filteredData, level, selectedData.depth]);
+  }, [filteredData, level, selectedData.depth, labels]);
 
   // Stack series
   const series = useMemo(() => {
@@ -141,18 +155,19 @@ const StackedBarChart = ({ data, ghgdata }) => {
     } else if (selectedData.selectedEmissions === 'margin') {
       keys = ['margin'];
     } else {
-      keys = ['base', 'margin'];
+      keys = ['margin', 'base']; // note: the reverse of this is stacking improperly
     }
 
     return d3
       .stack()
       .keys(keys)
-      .value((d, key) => d[key])(aggregatedData);
+      .order(d3.stackOrderNone)
+      .offset(d3.stackOffsetNone)(aggregatedData);
   }, [aggregatedData, selectedData.selectedEmissions]);
 
   // Compute chart dimensions based on data and container size
   const width = size.width || 628;
-  const height = aggregatedData.length * 15 + 30 + 30;
+  const height = aggregatedData.length * 13 + 30 + 30;
 
   // Scales
   const x = useMemo(() => {
@@ -161,44 +176,44 @@ const StackedBarChart = ({ data, ghgdata }) => {
       .scaleLinear()
       .domain([0, maxValue || 0])
       .nice()
-      .range([100, width - 10]);
+      .range([120, width - 10]); // Increased left padding for labels
   }, [series, width]);
 
   const y = useMemo(() => {
     return d3
       .scaleBand()
-      .domain(aggregatedData.map((d) => d.level))
+      .domain(aggregatedData.map((d) => d.label))
       .range([30, height - 30])
-      .padding(0.1);
+      .padding(0.2); // Increased padding for better spacing
   }, [aggregatedData, height]);
 
   const color = useMemo(() => {
     return d3
       .scaleOrdinal()
-      .domain(series.map((d) => d.key))
-      .range(d3.schemeCategory10.slice(0, series.length))
+      .domain(['base', 'margin']) // Fixed domain for consistent coloring
+      .range(['#1f77b4', '#ff7f0e']) // Specific colors for 'base' and 'margin'
       .unknown('#ccc');
-  }, [series]);
+  }, []);
 
-  const formatValue = (x) =>
-    isNaN(x) ? 'N/A' : x.toLocaleString('en');
+  const formatValue = (x) => (isNaN(x) ? 'N/A' : x.toLocaleString('en'));
 
   useEffect(() => {
     if (isEmpty(aggregatedData) || size.width === 0) return;
 
-    // Select and clear the SVG
-    const svg = d3
-      .select(svgRef.current)
+    // Clear the SVG
+    const svg = d3.select(svgRef.current);
+    svg.selectAll('*').remove();
+
+    svg
       .attr('width', width)
       .attr('height', height)
       .attr('viewBox', [0, 0, width, height])
       .attr('style', 'max-width: 100%; height: auto;');
 
-    svg.selectAll('*').remove();
-
     // Draw the chart
     const chart = svg.append('g');
 
+    // Draw the bars
     chart
       .selectAll('g.layer')
       .data(series)
@@ -206,17 +221,19 @@ const StackedBarChart = ({ data, ghgdata }) => {
       .attr('class', 'layer')
       .attr('fill', (d) => color(d.key))
       .selectAll('rect')
-      .data((layer) => layer.map((d) => ({ ...d, key: layer.key })))
+      .data((d) => d)
       .join('rect')
       .attr('x', (d) => x(d[0]))
-      .attr('y', (d) => y(d.data.level))
+      .attr('y', (d) => y(d.data.label))
       .attr('height', y.bandwidth())
       .attr('width', (d) => x(d[1]) - x(d[0]))
       .append('title')
-      .text(
-        (d) =>
-          `${d.data.level} ${d.key}\n${formatValue(d.data[d.key])}`,
-      );
+      .text((d) => {
+        const total = formatValue(d.data.base + d.data.margin);
+        const base = d.data.base.toFixed(3); // Round base
+        const margin = d.data.margin.toFixed(3); // Round margin
+        return `${d.data.label}\nMargin: ${margin}\nBase: ${base}\nTotal: ${total}`;
+      });
 
     // Horizontal axis
     chart
@@ -228,7 +245,7 @@ const StackedBarChart = ({ data, ghgdata }) => {
     // Vertical axis
     chart
       .append('g')
-      .attr('transform', `translate(100,0)`)
+      .attr('transform', `translate(${x.range()[0]},0)`)
       .call(d3.axisLeft(y).tickSizeOuter(0))
       .call((g) => g.selectAll('.domain').remove());
   }, [
@@ -247,17 +264,16 @@ const StackedBarChart = ({ data, ghgdata }) => {
       {isEmpty(aggregatedData) ? (
         <div>No data available</div>
       ) : (
-        <svg ref={svgRef} style={{ padding: 0, margin: 0 }}></svg>
+        <svg ref={svgRef}></svg>
       )}
       <div>Selected area: {selectedData.naics}</div>
       <div>Area title: {selectedData.label}</div>
       <div>
-        Hierarchy depth (0 = all industries, 1 = sector, 2 = subsector,
-        etc.): {selectedData.depth}
+        Hierarchy depth (0 = all industries, 1 = sector, 2 = subsector, etc.):
+        {selectedData.depth}
       </div>
       <div>
-        Data to display ('margin', 'base', 'all'):{' '}
-        {selectedData.selectedEmissions}
+        Data to display ('margin', 'base', 'all'): {selectedData.selectedEmissions}
       </div>
     </div>
   );
