@@ -13,16 +13,12 @@ import SelectedDataContext from '../../stores/SelectedDataContext.js';
 
 import './StackedBarChart.css';
 
-const StackedBarChart = ({ data }) => {
-  // TODO: Make chart dynamic by re-redering on view change to sub-sectors, indgrps, industries and individual gases
-  // TODO: Smooth render transition on re-redering
-  // Extended TODO: Add tooltip maybe?
-
+const StackedBarChart = ({ data, ghgdata }) => {
   const svgRef = useRef(null);
   const graphRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
-  const { selectedData, _ } = useContext(SelectedDataContext);
+  const { selectedData } = useContext(SelectedDataContext);
 
   const handleResize = useCallback(
     debounce((entry) => {
@@ -39,30 +35,120 @@ const StackedBarChart = ({ data }) => {
     };
   }, [handleResize]);
 
+  const map = {
+    0: 'sector',
+    1: 'subsector',
+    2: 'indGroup',
+    3: 'industry',
+  };
+
+  const level = map[selectedData.depth];
+  const upperlevel =
+    selectedData.depth > 0 ? map[selectedData.depth - 1] : null;
+
+  // Use useMemo to make modifiedData responsive to changes in selectedData
+  const modifiedData = useMemo(() => {
+    return selectedData.depth === 4 ? ghgdata : data;
+  }, [selectedData.depth, ghgdata, data]);
+
+  const filteredData = useMemo(() => {
+    if (selectedData.naics == null || upperlevel == null) {
+      return modifiedData;
+    } else {
+      return modifiedData.filter(
+        (d) => d[upperlevel] === selectedData.naics,
+      );
+    }
+  }, [modifiedData, selectedData.naics, upperlevel]);
+
   const aggregatedData = useMemo(() => {
-    if (isEmpty(data)) return [];
-    const emissionsBySector = Array.from(
-      d3.rollup(
-        data,
-        (v) => ({
-          base: d3.sum(v, (d) => d.base),
-          margin: d3.sum(v, (d) => d.margins),
+    if (!filteredData || filteredData.length === 0) return [];
+
+    if (selectedData.depth === 4) {
+      // Aggregate data per GHG
+      const emissionsByGhg = Array.from(
+        d3.rollup(
+          filteredData,
+          (v) => ({
+            base: d3.sum(v, (d) => d.base),
+            margin: d3.sum(v, (d) => d.margins),
+          }),
+          (d) => d.ghg,
+        ),
+        ([ghgKey, values]) => ({ ghg: ghgKey, ...values }),
+      );
+
+      // Sort GHGs by total emissions (base + margin) in descending order
+      const sortedEmissions = emissionsByGhg.sort(
+        (a, b) => b.base + b.margin - (a.base + a.margin),
+      );
+
+      // Get top 4 GHGs
+      const top4Ghgs = sortedEmissions.slice(0, 4);
+
+      // Sum the rest into 'Other gases'
+      const otherGhgs = sortedEmissions.slice(4);
+
+      const otherGhgsSum = otherGhgs.reduce(
+        (acc, curr) => ({
+          base: acc.base + curr.base,
+          margin: acc.margin + curr.margin,
         }),
-        (d) => d.sector,
-      ),
-      ([sector, values]) => ({ sector, ...values }),
-    );
-    return emissionsBySector;
-  }, [data]);
+        { base: 0, margin: 0 },
+      );
+
+      // Build the final array
+      const finalData = [...top4Ghgs];
+
+      if (otherGhgs.length > 0) {
+        finalData.push({
+          ghg: 'Other gases',
+          base: otherGhgsSum.base,
+          margin: otherGhgsSum.margin,
+        });
+      }
+
+      // Map to required structure
+      return finalData.map((d) => ({
+        level: d.ghg,
+        base: d.base,
+        margin: d.margin,
+      }));
+    } else {
+      const emissionsByLevel = Array.from(
+        d3.rollup(
+          filteredData,
+          (v) => ({
+            base: d3.sum(v, (d) => d.base),
+            margin: d3.sum(v, (d) => d.margins),
+          }),
+          (d) => d[level],
+        ),
+        ([levelKey, values]) => ({ level: levelKey, ...values }),
+      );
+      return emissionsByLevel;
+    }
+  }, [filteredData, level, selectedData.depth]);
 
   // Stack series
   const series = useMemo(() => {
     if (isEmpty(aggregatedData)) return [];
+
+    // Determine the keys based on selectedEmissions
+    let keys = [];
+    if (selectedData.selectedEmissions === 'base') {
+      keys = ['base'];
+    } else if (selectedData.selectedEmissions === 'margin') {
+      keys = ['margin'];
+    } else {
+      keys = ['base', 'margin'];
+    }
+
     return d3
       .stack()
-      .keys(['base', 'margin'])
+      .keys(keys)
       .value((d, key) => d[key])(aggregatedData);
-  }, [aggregatedData]);
+  }, [aggregatedData, selectedData.selectedEmissions]);
 
   // Compute chart dimensions based on data and container size
   const width = size.width || 628;
@@ -81,13 +167,7 @@ const StackedBarChart = ({ data }) => {
   const y = useMemo(() => {
     return d3
       .scaleBand()
-      .domain(
-        d3.groupSort(
-          aggregatedData,
-          (D) => -(D.base + D.margin),
-          (d) => d.sector,
-        ),
-      )
+      .domain(aggregatedData.map((d) => d.level))
       .range([30, height - 30])
       .padding(0.1);
   }, [aggregatedData, height]);
@@ -100,7 +180,8 @@ const StackedBarChart = ({ data }) => {
       .unknown('#ccc');
   }, [series]);
 
-  const formatValue = (x) => (isNaN(x) ? 'N/A' : x.toLocaleString('en'));
+  const formatValue = (x) =>
+    isNaN(x) ? 'N/A' : x.toLocaleString('en');
 
   useEffect(() => {
     if (isEmpty(aggregatedData) || size.width === 0) return;
@@ -128,12 +209,13 @@ const StackedBarChart = ({ data }) => {
       .data((layer) => layer.map((d) => ({ ...d, key: layer.key })))
       .join('rect')
       .attr('x', (d) => x(d[0]))
-      .attr('y', (d) => y(d.data.sector))
+      .attr('y', (d) => y(d.data.level))
       .attr('height', y.bandwidth())
       .attr('width', (d) => x(d[1]) - x(d[0]))
       .append('title')
       .text(
-        (d) => `${d.data.sector} ${d.key}\n${formatValue(d.data[d.key])}`, // Tooltip
+        (d) =>
+          `${d.data.level} ${d.key}\n${formatValue(d.data[d.key])}`,
       );
 
     // Horizontal axis
@@ -149,16 +231,29 @@ const StackedBarChart = ({ data }) => {
       .attr('transform', `translate(100,0)`)
       .call(d3.axisLeft(y).tickSizeOuter(0))
       .call((g) => g.selectAll('.domain').remove());
-  }, [aggregatedData, series, x, y, color, width, height]);
+  }, [
+    aggregatedData,
+    series,
+    x,
+    y,
+    color,
+    width,
+    height,
+    size.width,
+  ]);
 
   return (
     <div ref={graphRef} className="bar-chart-container">
-      <svg ref={svgRef} style={{ padding: 0, margin: 0 }}></svg>
+      {isEmpty(aggregatedData) ? (
+        <div>No data available</div>
+      ) : (
+        <svg ref={svgRef} style={{ padding: 0, margin: 0 }}></svg>
+      )}
       <div>Selected area: {selectedData.naics}</div>
       <div>Area title: {selectedData.label}</div>
       <div>
-        Hierarchy depth (0 = all industries, 1 = sector, 2 = subsector, etc.):{' '}
-        {selectedData.depth}
+        Hierarchy depth (0 = all industries, 1 = sector, 2 = subsector,
+        etc.): {selectedData.depth}
       </div>
       <div>
         Data to display ('margin', 'base', 'all'):{' '}

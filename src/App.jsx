@@ -110,7 +110,7 @@ function App() {
               <h2>Gas Emissions by Sector</h2>
             </div>
             <div className="sidebar-item">
-              <StackedBarChart data={data.equivEmissions} />
+              <StackedBarChart data={data.equivEmissions} ghgdata={data.allEmissions}/>
             </div>
             <div className="sidebar-item">Sidebar item 2</div>
           </div>
