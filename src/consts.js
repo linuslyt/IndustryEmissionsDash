@@ -20,3 +20,29 @@ export const LABEL_COLUMN_NAMES = {
   NAICS: '2017 NAICS US Code',
   TITLE: '2017 NAICS US Title',
 };
+
+// For react-select
+export const SELECTED_EMISSIONS_DROPDOWN_OPTIONS = [
+  {
+    label: 'Total emissions',
+    value: 'total',
+  },
+  {
+    label: 'Production emissions',
+    value: 'base',
+  },
+  {
+    label: 'Margins emissions',
+    value: 'margin',
+  },
+];
+
+export const DEFAULT_SELECTED_DATA = {
+  naics: '',
+  depth: 0,
+  label: '',
+  terminalNode: false,
+  column: 'sector',
+  pieRadius: 0,
+  selectedEmissions: 'total',
+};

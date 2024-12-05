@@ -13,16 +13,18 @@ import {
 import Select from 'react-select';
 import SelectedDataContext from '../../stores/SelectedDataContext';
 
+import {
+  DEFAULT_SELECTED_DATA,
+  SELECTED_EMISSIONS_DROPDOWN_OPTIONS,
+} from '../../consts';
 import PieChart from '../PieChart/PieChart';
 import './index.css';
 
-// TODO: add buttons for return to root/recenter at selected node in corner. make them noop at root level instead of throwing error.
-// TODO: If no children set opacity to 0 and display pie chart instead.
-
+// TODO: fix react select value from resetting on bubble select change
 function PackedBubbleChart({ data }) {
   const { equivEmissions: totalData, naicsLabels: labels } = data;
 
-  const [selectedBubble, setSelectedBubble] = useState(null); // TODO: hoist into react context to allow for use in other components
+  const [selectedBubble, setSelectedBubble] = useState(null);
   const { selectedData, setSelectedData } = useContext(SelectedDataContext);
   const bubbleDisplayed = (d) => d.depth <= selectedBubble.depth + 1;
   const labelDisplayed = (d) => d.depth === selectedBubble.depth + 1; // TODO: hide if font size < 1. move to tooltip.
@@ -167,7 +169,6 @@ function PackedBubbleChart({ data }) {
     const scale = Math.min(size.width, size.height) / (b.r * 2);
     const circleHTML = e.currentTarget;
     const pieRadius = circleHTML.getAttribute('r') * scale;
-    console.log('rad', pieRadius * scale);
     setSelectedData({
       ...selectedData,
       naics: b.data[0],
@@ -237,27 +238,11 @@ function PackedBubbleChart({ data }) {
           .style('font-size', (d) => `${d.r / 6 / e.transform.k}px`);
       });
 
-    svgRoot.call(zoom);
+    svgRoot.call(zoom).on('.zoom', null);
     svgRoot.node().zoom = zoom;
     // .on('wheel.zoom', null);
     return zoom;
   }, [svgRoot]);
-
-  // For react-select
-  const selectedEmissionsOptions = [
-    {
-      label: 'Total emissions',
-      value: 'all',
-    },
-    {
-      label: 'Production emissions',
-      value: 'base',
-    },
-    {
-      label: 'Margins emissions',
-      value: 'margin',
-    },
-  ];
 
   // https://github.com/JedWatson/react-select/issues/4201#issuecomment-874098561
   const reactSelectStyle = {
@@ -273,21 +258,38 @@ function PackedBubbleChart({ data }) {
     }),
   };
 
-  const handleReset = () => {
+  function handleReset() {
     svgRoot.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+    setSelectedData(DEFAULT_SELECTED_DATA);
     setSelectedBubble(hierarchyData);
-  };
+  }
+
+  function handleGoUp() {
+    const b = selectedBubble.parent;
+    setSelectedData({
+      ...selectedData,
+      naics: b.data[0],
+      depth: b.depth,
+      label: labels.get(b.data[0]),
+      terminalNode: false,
+      column: b.column,
+      pieRadius: 0,
+    });
+
+    zoomAndCenterBubble(b);
+  }
+
   return (
     <>
       <Select
-        options={selectedEmissionsOptions}
-        value={selectedEmissionsOptions.label}
+        options={SELECTED_EMISSIONS_DROPDOWN_OPTIONS}
+        value={SELECTED_EMISSIONS_DROPDOWN_OPTIONS.label}
         menuPortalTarget={document.body}
         onChange={(e) =>
           setSelectedData({ ...selectedData, selectedEmissions: e.value })
         }
         styles={reactSelectStyle}
-        defaultValue={selectedEmissionsOptions[0]}
+        defaultValue={SELECTED_EMISSIONS_DROPDOWN_OPTIONS[0]}
       />
       <Button
         variant="contained"
@@ -302,8 +304,8 @@ function PackedBubbleChart({ data }) {
       </Button>
       <Button
         variant="contained"
-        disabled={!selectedBubble.parent}
-        onClick={() => zoomAndCenterBubble(selectedBubble?.parent)}
+        disabled={!selectedBubble?.parent}
+        onClick={handleGoUp}
         style={{
           whiteSpace: 'nowrap',
           minWidth: 'auto',

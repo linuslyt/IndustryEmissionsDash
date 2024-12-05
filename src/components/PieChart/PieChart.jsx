@@ -14,7 +14,7 @@ import SelectedDataContext from '../../stores/SelectedDataContext';
 // get x, y, r from selected Bubble. pass as prop.
 // get total vs base emission from select. pass as prop.
 // TODO: add title
-// TODO: move pie chart when scrolling and panning bubble chart. might have to move this into the original SVG.
+// TODO: add percentages
 // TODO: connect select box to change pie chart between total/margin/base
 
 const PieChart = ({ ghgdata }) => {
@@ -113,7 +113,7 @@ const PieChart = ({ ghgdata }) => {
       .transition()
       .delay(500) // Duration of the fade-in effect
       .duration(500)
-      .style('opacity', 100);
+      .style('opacity', selectedData.terminalNode * 100);
     // TODO: make this consistent for all GHG types
     const color = d3
       .scaleOrdinal()
@@ -162,8 +162,9 @@ const PieChart = ({ ghgdata }) => {
       .transition()
       .delay(500) // Duration of the fade-in effect
       .duration(500)
-      .style('pointer-events', 'all')
-      .style('opacity', 1);
+      .style('opacity', selectedData.terminalNode * 100);
+
+    sectors.transition().delay(1000).style('pointer-events', 'all');
 
     sectors
       .on('mouseover', function (event, d) {

@@ -5,6 +5,7 @@ import PackedBubbleChart from './components/PackedBubbleChart/PackedBubbleChart'
 import StackedBarChart from './components/StackedBarChart/StackedBarChart';
 import {
   DATAFILES,
+  DEFAULT_SELECTED_DATA,
   EMISSIONS_COLUMN_NAMES,
   LABEL_COLUMN_NAMES,
 } from './consts';
@@ -17,15 +18,8 @@ function App() {
     labels: null,
   });
 
-  const [selectedData, setSelectedData] = useState({
-    naics: '',
-    depth: 0,
-    label: '',
-    selectedEmissions: 'all',
-  });
+  const [selectedData, setSelectedData] = useState(DEFAULT_SELECTED_DATA);
 
-  // TODO: Context/state for selected data
-  // TODO: Compute derived data here e.g. emissions by sector/industry/gas
   useEffect(() => {
     const readCSV = async () => {
       const emissionsColMapper = (r) => {
@@ -67,7 +61,6 @@ function App() {
           labelsColMapper,
         );
         setData({
-          // TODO: hoist into react context to allow for use in other components
           allEmissions: allEmissionsData,
           equivEmissions: equivCO2EmissionsData,
           naicsLabels: new Map(naicsLabels),
