@@ -8,12 +8,19 @@ import {
   EMISSIONS_COLUMN_NAMES,
   LABEL_COLUMN_NAMES,
 } from './consts';
+import SelectedDataContext from './stores/SelectedDataContext';
 
 function App() {
   const [data, setData] = useState({
     allEmissions: null,
     equivEmissions: null,
     labels: null,
+  });
+
+  const [selectedData, setSelectedData] = useState({
+    naics: '',
+    depth: 0,
+    label: '',
   });
 
   // TODO: Context/state for selected data
@@ -80,26 +87,33 @@ function App() {
 
   return (
     <>
-      <div className="root-grid">
-        <div className="header">
-          <h1>Header ribbon</h1>
-        </div>
-        <div className="main-grid">
-          <PackedBubbleChart
-            data={data.equivEmissions}
-            labels={data.naicsLabels}
-          />
-        </div>
-        <div className="sidebar-grid">
-          <div className="sidebar-item">
-            <h2>Gas Emissions by Sector</h2>
+      <SelectedDataContext.Provider
+        value={{
+          selectedData,
+          setSelectedData,
+        }}
+      >
+        <div className="root-grid">
+          <div className="header">
+            <h1>Header ribbon</h1>
           </div>
-          <div className="sidebar-item">
-            <StackedBarChart data={data.equivEmissions} />
+          <div className="main-grid">
+            <PackedBubbleChart
+              data={data.equivEmissions}
+              labels={data.naicsLabels}
+            />
           </div>
-          <div className="sidebar-item">Sidebar item 2</div>
+          <div className="sidebar-grid">
+            <div className="sidebar-item">
+              <h2>Gas Emissions by Sector</h2>
+            </div>
+            <div className="sidebar-item">
+              <StackedBarChart data={data.equivEmissions} />
+            </div>
+            <div className="sidebar-item">Sidebar item 2</div>
+          </div>
         </div>
-      </div>
+      </SelectedDataContext.Provider>
     </>
   );
 }

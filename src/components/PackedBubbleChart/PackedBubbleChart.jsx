@@ -1,7 +1,15 @@
 import useResizeObserver from '@react-hook/resize-observer';
 import * as d3 from 'd3';
 import { debounce, isEmpty } from 'lodash';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import SelectedDataContext from '../../stores/SelectedDataContext';
 import './index.css';
 
 // TODO: add buttons for return to root/recenter at selected node in corner
@@ -9,7 +17,8 @@ import './index.css';
 
 function PackedBubbleChart({ data, labels }) {
   // console.log(labels?.get('11'));
-  const [selectedBubble, setSelectedBubble] = useState(root); // TODO: hoist into react context to allow for use in other components
+  const [selectedBubble, setSelectedBubble] = useState(null); // TODO: hoist into react context to allow for use in other components
+  const { selectedData, setSelectedData } = useContext(SelectedDataContext);
   const bubbleDisplayed = (d) => d.depth <= selectedBubble.depth + 1;
   const labelDisplayed = (d) => d.depth === selectedBubble.depth + 1; // TODO: hide if font size < 1. move to tooltip.
   const color = d3
@@ -55,6 +64,19 @@ function PackedBubbleChart({ data, labels }) {
     setSelectedBubble(root);
     return root;
   }, [data]);
+
+  useEffect(() => {
+    if (!selectedBubble || !selectedBubble.data) return;
+    setSelectedData({
+      naics: selectedBubble.data[0],
+      depth: selectedBubble.depth,
+      label: labels.get(selectedBubble.data[0]),
+    });
+  }, [selectedBubble]);
+
+  useEffect(() => {
+    console.log('root', hierarchyData);
+  }, [hierarchyData]);
 
   const [size, setSize] = useState({ width: 0, height: 0 });
   const graphRef = useRef(null); // When ref is created as null, React will map it to the JSX node it's assigned to on render.
