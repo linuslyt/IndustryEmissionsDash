@@ -16,6 +16,7 @@ import SelectedDataContext from '../../stores/SelectedDataContext';
 // TODO: add title
 // TODO: add percentages
 // TODO: connect select box to change pie chart between total/margin/base
+// TODO: update on resize without rerendering entire chart/resetting zoom/pan
 
 const PieChart = ({ ghgdata }) => {
   const { selectedData, setSelectedData } = useContext(SelectedDataContext);

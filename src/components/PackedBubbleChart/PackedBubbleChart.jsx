@@ -20,7 +20,7 @@ import {
 import PieChart from '../PieChart/PieChart';
 import './index.css';
 
-// TODO: fix react select value from resetting on bubble select change
+// TODO: update on resize without rerendering entire chart/resetting zoom/pan
 function PackedBubbleChart({ data }) {
   const { equivEmissions: totalData, naicsLabels: labels } = data;
 
