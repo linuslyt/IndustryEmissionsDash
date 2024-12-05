@@ -1,0 +1,93 @@
+.card-container {
+    max-width: 400px;
+    border: 2px solid black;
+    padding: 16px;
+    font-family: Arial, sans-serif;
+    color: black;
+    margin: auto;
+    text-align: center;
+  }
+  
+  .card-title {
+    font-size: 24px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  
+  .card-subtitle {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  
+  .diagram-section {
+    position: relative;
+    margin: 16px 0;
+  }
+  
+  .diagram-center {
+    font-size: 35px;
+    font-weight: bold;
+    border: 2px solid black;
+    border-radius: 50%;
+    width: 100px;
+    height: 90px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+    position: relative;
+  }
+  
+  .diagram-connection {
+    font-size: 16px;
+    position: absolute;
+    transform: translate(-50%, -50%);
+  }
+  
+  .diagram-connection span {
+    font-size: 18px;
+  }
+  
+  .info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .info-box {
+    border: 2px solid black;
+    padding: 8px;
+    font-size: 12px;
+  }
+  
+  .info-box h2 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: bold;
+    border-bottom: 2px solid black;
+    padding-bottom: 4px;
+  }
+  
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid #000;
+  }
+  
+  .info-row:last-child {
+    border-bottom: none;
+  }
+  
+  .info-label {
+    font-weight: bold;
+    width: 60%;
+  }
+  
+  .info-value {
+    text-align: right;
+    width: 40%;
+  }
+  
