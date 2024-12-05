@@ -169,15 +169,15 @@ function PackedBubbleChart({ data }) {
     const scale = Math.min(size.width, size.height) / (b.r * 2);
     const circleHTML = e.currentTarget;
     const pieRadius = circleHTML.getAttribute('r') * scale;
-    setSelectedData({
-      ...selectedData,
+    setSelectedData((prevState) => ({
+      ...prevState,
       naics: b.data[0],
       depth: b.depth,
       label: labels.get(b.data[0]),
       terminalNode: !('children' in b),
       column: b.column,
       pieRadius: pieRadius,
-    });
+    }));
     zoomAndCenterBubble(b);
   }
 
@@ -260,21 +260,24 @@ function PackedBubbleChart({ data }) {
 
   function handleReset() {
     svgRoot.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
-    setSelectedData(DEFAULT_SELECTED_DATA);
+    setSelectedData((prevState) => ({
+      ...DEFAULT_SELECTED_DATA,
+      selectedEmissions: prevState.selectedEmissions,
+    }));
     setSelectedBubble(hierarchyData);
   }
 
   function handleGoUp() {
     const b = selectedBubble.parent;
-    setSelectedData({
-      ...selectedData,
+    setSelectedData((prevState) => ({
+      ...prevState,
       naics: b.data[0],
       depth: b.depth,
       label: labels.get(b.data[0]),
       terminalNode: false,
       column: b.column,
       pieRadius: 0,
-    });
+    }));
 
     zoomAndCenterBubble(b);
   }
@@ -286,10 +289,13 @@ function PackedBubbleChart({ data }) {
         value={SELECTED_EMISSIONS_DROPDOWN_OPTIONS.label}
         menuPortalTarget={document.body}
         onChange={(e) =>
-          setSelectedData({ ...selectedData, selectedEmissions: e.value })
+          setSelectedData((prevState) => ({
+            ...prevState,
+            selectedEmissions: e.value,
+          }))
         }
-        styles={reactSelectStyle}
         defaultValue={SELECTED_EMISSIONS_DROPDOWN_OPTIONS[0]}
+        styles={reactSelectStyle}
       />
       <Button
         variant="contained"
