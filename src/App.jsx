@@ -8,6 +8,7 @@ import {
   EMISSIONS_COLUMN_NAMES,
   LABEL_COLUMN_NAMES,
 } from './consts';
+import PieChart from './components/PieChart/PieChart';
 
 function App() {
   const [data, setData] = useState({
@@ -89,6 +90,7 @@ function App() {
             data={data.equivEmissions}
             labels={data.naicsLabels}
           />
+          {/* <PieChart ghgdata={data.allEmissions}/> The chart only shows for 'Soybean Farming using the code' */}
         </div>
         <div className="sidebar-grid">
           <div className="sidebar-item">
