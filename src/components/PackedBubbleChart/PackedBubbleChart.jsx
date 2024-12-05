@@ -85,18 +85,6 @@ function PackedBubbleChart({ data }) {
     return root;
   }, [totalData]);
 
-  useEffect(() => {
-    if (!selectedBubble || !selectedBubble.data) return;
-    setSelectedData({
-      ...selectedData,
-      naics: selectedBubble.data[0],
-      depth: selectedBubble.depth,
-      label: labels.get(selectedBubble.data[0]),
-      terminalNode: !('children' in selectedBubble),
-      column: selectedBubble.column,
-    });
-  }, [selectedBubble]);
-
   const [size, setSize] = useState({ width: 0, height: 0 });
   const graphRef = useRef(null); // When ref is created as null, React will map it to the JSX node it's assigned to on render.
   const handleResize = useCallback(
@@ -150,7 +138,7 @@ function PackedBubbleChart({ data }) {
         d3.select(this).attr('stroke', 'none');
       })
       .attr('stroke-width', 1)
-      .on('click', (e, d) => zoomAndCenterBubble(d));
+      .on('click', (e, d) => handleBubbleClick(e, d));
 
     // Add labels to leaf nodes
     const labelDivs = svg
@@ -175,9 +163,26 @@ function PackedBubbleChart({ data }) {
     return svgRoot;
   };
 
+  function handleBubbleClick(e, b) {
+    const scale = Math.min(size.width, size.height) / (b.r * 2);
+    const circleHTML = e.currentTarget;
+    const pieRadius = circleHTML.getAttribute('r') * scale;
+    console.log('rad', pieRadius * scale);
+    setSelectedData({
+      ...selectedData,
+      naics: b.data[0],
+      depth: b.depth,
+      label: labels.get(b.data[0]),
+      terminalNode: !('children' in b),
+      column: b.column,
+      pieRadius: pieRadius,
+    });
+    zoomAndCenterBubble(b);
+  }
+
   function zoomAndCenterBubble(b) {
+    if (!b) return;
     setSelectedBubble(b);
-    console.log('zooming to bubble', b);
     const x = b.x;
     const y = b.y;
     const r = b.r;
@@ -185,6 +190,8 @@ function PackedBubbleChart({ data }) {
     const scale = Math.min(size.width, size.height) / (r * 2);
     const dx = size.width / 2 - x * scale;
     const dy = size.height / 2 - y * scale;
+
+    console.log('zooming to bubble', b);
 
     svgRoot
       .transition()
@@ -295,7 +302,8 @@ function PackedBubbleChart({ data }) {
       </Button>
       <Button
         variant="contained"
-        onClick={() => zoomAndCenterBubble(selectedBubble.parent)}
+        disabled={!selectedBubble.parent}
+        onClick={() => zoomAndCenterBubble(selectedBubble?.parent)}
         style={{
           whiteSpace: 'nowrap',
           minWidth: 'auto',
