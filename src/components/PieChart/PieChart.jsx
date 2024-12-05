@@ -17,6 +17,7 @@ import SelectedDataContext from '../../stores/SelectedDataContext';
 // TODO: add percentages
 // TODO: connect select box to change pie chart between total/margin/base
 // TODO: update on resize without rerendering entire chart/resetting zoom/pan
+// TODO: change pie chart from absolute to equivalent CO2 GWP units
 
 const PieChart = ({ ghgdata }) => {
   const { selectedData, setSelectedData } = useContext(SelectedDataContext);
@@ -107,7 +108,7 @@ const PieChart = ({ ghgdata }) => {
     const legendGroup = d3
       .select(svgRef.current)
       .append('g')
-      .attr('transform', `translate(${width * 0.8}, ${height * 0.8})`)
+      .attr('transform', `translate(${width * 0.75}, ${height * 0.825})`)
       .style('opacity', 0);
 
     legendGroup
