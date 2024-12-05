@@ -32,6 +32,21 @@ function PackedBubbleChart({ data }) {
     .range(['hsl(152,80%,80%)', 'hsl(228,30%,40%)']) // TODO: placeholder color scheme. replace as necessary
     .interpolate(d3.interpolateHcl);
 
+  function getNaicsLevel(naics) {
+    if (!naics) return;
+    const depthToColumnMap = [
+      'naics', // 6 full digits, 0 trailing zeroes
+      'industry', // 5 full digits, 1 trailing zero
+      'indGroup', // etc
+      'subsector',
+      'sector',
+    ];
+
+    // Count trailing zeroes to get NAICS level
+    const trailingZeroes = naics.match(/0+$/);
+    return depthToColumnMap[trailingZeroes ? trailingZeroes[0].length : 0];
+  }
+
   const hierarchyData = useMemo(() => {
     if (isEmpty(totalData)) return;
     const emissionsBySector = d3.rollup(
@@ -78,6 +93,7 @@ function PackedBubbleChart({ data }) {
       depth: selectedBubble.depth,
       label: labels.get(selectedBubble.data[0]),
       terminalNode: !('children' in selectedBubble),
+      column: selectedBubble.column,
     });
   }, [selectedBubble]);
 
@@ -100,7 +116,9 @@ function PackedBubbleChart({ data }) {
     if (!hierarchyData) return;
     if (size.width === 0) return;
     const pack = d3.pack().size([size.width, size.height]).padding(1);
-    const root = hierarchyData.copy();
+    const root = hierarchyData
+      .copy()
+      .each((n) => (n.column = getNaicsLevel(n.data[0])));
     pack(root);
     // console.log(size.width, size.height);
     // console.log(root);

@@ -39,25 +39,17 @@ const PieChart = ({ ghgdata }) => {
 
   // Aggregate and filter data to include only gases with slice angle >= 1 degree
   const aggregatedData = useMemo(() => {
-    console.log('repie');
     if (isEmpty(ghgdata) || !selectedData.terminalNode) return [];
-
-    const depthToColumnMap = [
-      'sector',
-      'subsector',
-      'indGroup',
-      'industry',
-      'naics',
-    ];
 
     const filter =
       selectedData.depth > 0
-        ? (d) =>
-            d[depthToColumnMap[selectedData.depth - 1]] === selectedData.naics
+        ? (d) => d[selectedData.column] === selectedData.naics
         : () => false;
     console.log(
       'filtering on column ',
-      depthToColumnMap[selectedData.depth - 1],
+      selectedData.column,
+      ' == ',
+      selectedData.naics,
     );
 
     // Filter data
@@ -88,6 +80,7 @@ const PieChart = ({ ghgdata }) => {
       finalData.push({ ghg: 'Other gases', total: otherTotal });
     }
 
+    console.log(filteredData);
     return finalData;
   }, [ghgdata, selectedData]);
 
@@ -113,6 +106,7 @@ const PieChart = ({ ghgdata }) => {
       .append('g')
       .attr('transform', `translate(${radius * 2 + margin * 2}, ${20})`);
 
+    // TODO: make this universal for all GHG types
     const color = d3
       .scaleOrdinal()
       .domain(aggregatedData.map((d) => d.ghg))
