@@ -103,6 +103,7 @@ function App() {
               data={data.equivEmissions}
               labels={data.naicsLabels}
             />
+            {/* <PieChart ghgdata={data.allEmissions}/> The chart only shows for 'Soybean Farming using the code' */}
           </div>
           <div className="sidebar-grid">
             <div className="sidebar-item">
