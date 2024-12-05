@@ -107,10 +107,17 @@ function App() {
           </div>
           <div className="sidebar-grid">
             <div className="sidebar-item">
-              <h2>Gas Emissions by Sector</h2>
+              <h2>
+                Gas Emissions in{' '}
+                {selectedData.label ? selectedData.label : 'Sectors'}
+              </h2>
             </div>
             <div className="sidebar-item">
-              <StackedBarChart data={data.equivEmissions} />
+              <StackedBarChart
+                data={data.equivEmissions}
+                ghgdata={data.allEmissions}
+                labels={data.naicsLabels}
+              />
             </div>
             <div className="sidebar-item">Sidebar item 2</div>
           </div>
