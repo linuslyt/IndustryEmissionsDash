@@ -47,7 +47,6 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
   const upperlevel =
     selectedData.depth > 0 ? map[selectedData.depth - 1] : null;
 
-  // Use useMemo to make modifiedData responsive to changes in selectedData
   const modifiedData = useMemo(() => {
     return selectedData.depth === 4 ? ghgdata : data;
   }, [selectedData.depth, ghgdata, data]);
@@ -64,7 +63,6 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
     if (!filteredData || filteredData.length === 0) return [];
 
     if (selectedData.depth === 4) {
-      // Aggregate data per GHG
       const emissionsByGhg = Array.from(
         d3.rollup(
           filteredData,
@@ -95,8 +93,6 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
         }),
         { base: 0, margin: 0 },
       );
-
-      // Build the final array
       const finalData = [...top4Ghgs];
 
       if (otherGhgs.length > 0) {
@@ -110,7 +106,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
       // Map to required structure with labels
       return finalData.map((d) => ({
         level: d.ghg,
-        label: d.ghg, // Use GHG names as labels
+        label: d.ghg,
         base: d.base,
         margin: d.margin,
       }));
@@ -146,7 +142,6 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
   const series = useMemo(() => {
     if (isEmpty(aggregatedData)) return [];
 
-    // Determine the keys based on selectedEmissions
     let keys = [];
     if (selectedData.selectedEmissions === 'base') {
       keys = ['base'];
@@ -174,7 +169,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
       .scaleLinear()
       .domain([0, maxValue || 0])
       .nice()
-      .range([120, width - 10]); // Increased left padding for labels
+      .range([120, width - 10]);
   }, [series, width]);
 
   const y = useMemo(() => {
@@ -182,13 +177,13 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
       .scaleBand()
       .domain(aggregatedData.map((d) => d.label))
       .range([30, height - 30])
-      .padding(0.2); // Increased padding for better spacing
+      .padding(0.2);
   }, [aggregatedData, height]);
 
   const color = useMemo(() => {
     return d3
       .scaleOrdinal()
-      .domain(['base', 'margin']) // Fixed domain for consistent coloring
+      .domain(['base', 'margin'])
       .range(['#1f77b4', '#ff7f0e']) // Specific colors for 'base' and 'margin'
       .unknown('#ccc');
   }, []);
@@ -204,9 +199,9 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
 
     svg
       .attr('width', width)
-      .attr('height', height)
-      .attr('viewBox', [0, -20, width, height])
-      .attr('style', 'max-width: 100%; height: auto;');
+      .attr('height', height + 20)
+      .attr('viewBox', [0, -40, width, height])
+      .attr('style', 'height: auto;');
 
     // Draw the chart
     const chart = svg.append('g');
@@ -259,6 +254,41 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
 
         return selectedData.depth === 4 ? specificGHGlabel : allGHGlabel;
       });
+
+    // Dynamic Legend
+    const activeKeys = series.length > 0 ? series.map((s) => s.key) : [];
+
+    const legendItemSize = 18;
+    const legendSpacing = 4;
+
+    const legendGroup = chart
+      .append('g')
+      .attr('transform', `translate(${width - 370}, -40)`); // adjust as needed
+
+    activeKeys.forEach((key, i) => {
+      const legendRow = legendGroup
+        .append('g')
+        .attr('transform', `translate(${i * 150},0)`);
+
+      // Color box
+      legendRow
+        .append('rect')
+        .attr('width', legendItemSize)
+        .attr('height', legendItemSize)
+        .attr('fill', color(key));
+
+      // Legend text
+      const labelText = key === 'base' ? 'Base Emissions' : 'Margin Emissions';
+
+      legendRow
+        .append('text')
+        .attr('x', legendItemSize + legendSpacing)
+        .attr('y', legendItemSize / 2)
+        .attr('dy', '0.35em')
+        .text(labelText)
+        .style('font-size', '12px')
+        .attr('text-anchor', 'start');
+    });
   }, [aggregatedData, series, x, y, color, width, height, size.width]);
 
   return (
