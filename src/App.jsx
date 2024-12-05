@@ -20,7 +20,7 @@ function App() {
   const [selectedData, setSelectedData] = useState({
     naics: '',
     depth: 0,
-    label: '', 
+    label: '',
     selectedEmissions: 'all',
   });
 
@@ -107,10 +107,17 @@ function App() {
           </div>
           <div className="sidebar-grid">
             <div className="sidebar-item">
-              <h2>Gas Emissions in {selectedData.label ? selectedData.label : 'Sectors'}</h2>
+              <h2>
+                Gas Emissions in{' '}
+                {selectedData.label ? selectedData.label : 'Sectors'}
+              </h2>
             </div>
             <div className="sidebar-item">
-              <StackedBarChart data={data.equivEmissions} ghgdata={data.allEmissions} labels={data.naicsLabels}/>
+              <StackedBarChart
+                data={data.equivEmissions}
+                ghgdata={data.allEmissions}
+                labels={data.naicsLabels}
+              />
             </div>
             <div className="sidebar-item">Sidebar item 2</div>
           </div>

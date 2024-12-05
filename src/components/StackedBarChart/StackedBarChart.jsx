@@ -56,9 +56,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
     if (selectedData.naics == null || upperlevel == null) {
       return modifiedData;
     } else {
-      return modifiedData.filter(
-        (d) => d[upperlevel] === selectedData.naics,
-      );
+      return modifiedData.filter((d) => d[upperlevel] === selectedData.naics);
     }
   }, [modifiedData, selectedData.naics, upperlevel]);
 
@@ -251,26 +249,17 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
 
     chart
       .append('text')
-      .attr('x', (size.width) / 2 + 40)
+      .attr('x', size.width / 2 + 40)
       .attr('y', 0)
       .attr('text-anchor', 'middle')
       .style('font-size', '14px')
       .text((d) => {
-        const allGHGlabel = "kg CO2e/2022 USD, purchaser price";
-        const specificGHGlabel = "kg/2022 USD, purchaser price";
-      
+        const allGHGlabel = 'kg CO2e/2022 USD, purchaser price';
+        const specificGHGlabel = 'kg/2022 USD, purchaser price';
+
         return selectedData.depth === 4 ? specificGHGlabel : allGHGlabel;
-      })
-  }, [
-    aggregatedData,
-    series,
-    x,
-    y,
-    color,
-    width,
-    height,
-    size.width,
-  ]);
+      });
+  }, [aggregatedData, series, x, y, color, width, height, size.width]);
 
   return (
     <div ref={graphRef} className="bar-chart-container">
@@ -286,7 +275,8 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
         {selectedData.depth}
       </div>
       <div>
-        Data to display ('margin', 'base', 'all'): {selectedData.selectedEmissions}
+        Data to display ('margin', 'base', 'all'):{' '}
+        {selectedData.selectedEmissions}
       </div>
     </div>
   );
