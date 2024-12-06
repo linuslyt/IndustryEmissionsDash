@@ -9,8 +9,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { GHG_FACTS } from '../../consts.js';
 import SelectedDataContext from '../../stores/SelectedDataContext.js';
-
 import './StackedBarChart.css';
 
 // TODO: update legend position.
@@ -69,8 +69,12 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
         d3.rollup(
           filteredData,
           (v) => ({
-            base: d3.sum(v, (d) => d.base),
-            margin: d3.sum(v, (d) => d.margins),
+            base: d3.sum(v, (d) =>
+              parseFloat(d.base * GHG_FACTS.get(d.ghg).gwp),
+            ),
+            margin: d3.sum(v, (d) =>
+              parseFloat(d.margins * GHG_FACTS.get(d.ghg).gwp),
+            ),
           }),
           (d) => d.ghg,
         ),
@@ -147,7 +151,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
     let keys = [];
     if (selectedData.selectedEmissions === 'base') {
       keys = ['base'];
-    } else if (selectedData.selectedEmissions === 'margin') {
+    } else if (selectedData.selectedEmissions === 'margins') {
       keys = ['margin'];
     } else {
       keys = ['margin', 'base']; // note: the reverse of this is stacking improperly
@@ -265,7 +269,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
       .style('font-size', '14px')
       .text((d) => {
         const allGHGlabel = 'kg CO2e/2022 USD, purchaser price';
-        const specificGHGlabel = 'kg/2022 USD, purchaser price';
+        const specificGHGlabel = 'kg CO2e/2022 USD, purchaser price';
 
         return selectedData.depth === 4 ? specificGHGlabel : allGHGlabel;
       });

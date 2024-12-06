@@ -47,7 +47,7 @@ export const SELECTED_EMISSIONS_DROPDOWN_OPTIONS = [
   },
   {
     label: 'Margins emissions',
-    value: 'margin',
+    value: 'margins',
   },
 ];
 

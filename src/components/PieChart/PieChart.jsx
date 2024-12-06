@@ -9,15 +9,13 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { GHG_FACTS } from '../../consts';
 import SelectedDataContext from '../../stores/SelectedDataContext';
 
 // get x, y, r from selected Bubble. pass as prop.
 // get total vs base emission from select. pass as prop.
 // TODO: add title
-// TODO: convert numbers to % of total GWP impact. Use 100-year GWP values from the 2014 IPCC 5th report (AR5).
-// TODO: connect select box to change pie chart between total/margin/base
 // TODO: update on resize without rerendering entire chart/resetting zoom/pan. https://stackoverflow.com/questions/39735367/d3-zoom-behavior-when-window-is-resized
-// TODO: add opaque background to legend
 
 const PieChart = ({ ghgdata }) => {
   const { selectedData, setSelectedData } = useContext(SelectedDataContext);
@@ -61,7 +59,11 @@ const PieChart = ({ ghgdata }) => {
 
     const emissionsByGHG = filteredData.map((d) => ({
       ghg: d.ghg,
-      total: parseFloat(d.total),
+      // Convert to equivalent CO2 amounts, i.e. CO2e units.
+      // CO2e = Mass of GHG x GWP. 100-year GWP values from the 2014 IPCC 5th report (AR5) were used.
+      total: parseFloat(
+        d[selectedData.selectedEmissions] * GHG_FACTS.get(d.ghg).gwp,
+      ),
     }));
 
     const totalEmissions = d3.sum(emissionsByGHG, (d) => d.total);
@@ -84,9 +86,8 @@ const PieChart = ({ ghgdata }) => {
       finalData.push({ ghg: 'Other gases', total: otherTotal });
     }
 
-    console.log(filteredData);
     return finalData;
-  }, [ghgdata, selectedData.naics]);
+  }, [ghgdata, selectedData.naics, selectedData.selectedEmissions]);
 
   useEffect(() => {
     d3.select(svgRef.current).selectAll('*').remove();
@@ -108,7 +109,7 @@ const PieChart = ({ ghgdata }) => {
     const legendGroup = d3
       .select(svgRef.current)
       .append('g')
-      .attr('transform', `translate(${width * 0.75}, ${height * 0.825})`)
+      .attr('transform', `translate(${width * 0.85}, ${height * 0.85})`)
       .style('opacity', 0);
 
     legendGroup
@@ -116,22 +117,24 @@ const PieChart = ({ ghgdata }) => {
       .delay(500) // Duration of the fade-in effect
       .duration(500)
       .style('opacity', selectedData.terminalNode * 100);
-    // TODO: make this consistent for all GHG types
     const color = d3
       .scaleOrdinal()
-      .domain(aggregatedData.map((d) => d.ghg))
+      .domain(Array.from(new Set(aggregatedData.map((d) => d.ghg).sort())))
       .range(d3.schemeCategory10);
 
     // pie generator
     const pie = d3
       .pie()
-      .value((d) => d.total)
-      .sort(null);
+      .value((d) => {
+        console.log('slice', d);
+        return d.total;
+      })
+      .sort((a, b) => b.total - a.total);
 
     const data_ready = pie(aggregatedData);
 
     // arc generator
-    const arc = d3.arc().innerRadius(0).outerRadius(radius);
+    const arc = d3.arc().innerRadius(1).outerRadius(radius);
 
     // tooltip
     const tooltip = d3
@@ -153,8 +156,8 @@ const PieChart = ({ ghgdata }) => {
       .append('path')
       .attr('d', arc)
       .attr('fill', (d) => color(d.data.ghg))
-      .attr('stroke', 'white')
-      .style('stroke-width', '0px')
+      .attr('stroke', (d) => color(d.data.ghg))
+      .style('stroke-width', '1px')
       .style('pointer-events', 'none')
       .style('opacity', 0);
 
@@ -187,7 +190,8 @@ const PieChart = ({ ghgdata }) => {
         tooltip.transition().duration(50).style('opacity', 0);
       })
       .on('click', function (e, d) {
-        console.log('selected gas', d.data.ghg);
+        if (!d || !d.data || !d.data.ghg || d.data.ghg === 'Other gases')
+          return;
         setSelectedData((prevData) => ({
           ...prevData,
           selectedGas: d.data.ghg,
