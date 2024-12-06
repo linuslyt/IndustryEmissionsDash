@@ -149,10 +149,10 @@ function PackedBubbleChart({ data }) {
       .selectAll('foreignObject')
       .data(root.descendants())
       .join('foreignObject')
-      .attr('x', (d) => d.x - d.r)
-      .attr('y', (d) => d.y - d.r)
-      .attr('width', (d) => d.r * 2)
-      .attr('height', (d) => d.r * 2)
+      .attr('x', (d) => d.x - d.r / Math.sqrt(2))
+      .attr('y', (d) => d.y - d.r / Math.sqrt(2))
+      .attr('width', (d) => (2 * d.r) / Math.sqrt(2))
+      .attr('height', (d) => (2 * d.r) / Math.sqrt(2))
       .attr('pointer-events', 'none')
       .attr('display', (d) => (labelDisplayed(d) ? 'auto' : 'none'));
 

@@ -25,7 +25,6 @@
   pointer-events: none;
   text-overflow: ellipsis;
   overflow: hidden;
-  padding: 15%;
   text-wrap: pretty;
   line-height: 1.5;
   text-overflow: ellipsis;
