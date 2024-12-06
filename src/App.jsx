@@ -10,6 +10,7 @@ import {
   LABEL_COLUMN_NAMES,
 } from './consts';
 import SelectedDataContext from './stores/SelectedDataContext';
+import GasFacts from './components/GasFacts/GasFacts';
 
 function App() {
   const [data, setData] = useState({
@@ -109,7 +110,9 @@ function App() {
                 labels={data.naicsLabels}
               />
             </div>
-            <div className="sidebar-item">Sidebar item 2</div>
+            <div className="sidebar-item">
+              <GasFacts />
+            </div>
           </div>
         </div>
       </SelectedDataContext.Provider>
