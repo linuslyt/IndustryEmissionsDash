@@ -177,7 +177,7 @@ const PieChart = ({ ghgdata }) => {
         tooltip.html(
           `<div><strong>Emitted Gas:</strong> ${d.data.ghg}
           <br><strong>Percent emissions:</strong> ${(((d.endAngle - d.startAngle) / (2 * Math.PI)) * 100).toFixed(2)}%
-          <br><strong>Total emissions:</strong> ${d.data.total.toLocaleString()} kg CO2e/2022 USD` +
+          <br><strong>Total emissions:</strong> ${d.data.total.toLocaleString()} kg CO2e/2022 USD goods purchased` +
             `${d.data.ghg === 'Other gases' ? '' : '<br>Click to examine gas facts in side panel.</div>'}`,
         );
       })

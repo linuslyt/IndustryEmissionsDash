@@ -335,9 +335,10 @@ function PackedBubbleChart({ data }) {
             whiteSpace: 'nowrap',
             minWidth: 'auto',
             textTransform: 'none',
+            display: selectedData.column ? '' : 'none',
           }}
         >
-          Back to root
+          Back to overview
         </Button>
         <Button
           variant="contained"
@@ -348,9 +349,10 @@ function PackedBubbleChart({ data }) {
             whiteSpace: 'nowrap',
             minWidth: 'auto',
             textTransform: 'none',
+            display: selectedData.column ? '' : 'none',
           }}
         >
-          Go to parent
+          Back to parent
         </Button>
       </div>
       <div ref={graphRef} className="main-container">

@@ -265,8 +265,8 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
       .attr('text-anchor', 'middle')
       .style('font-size', '14px')
       .text((d) => {
-        const allGHGlabel = 'kg CO2e/2022 USD, purchaser price';
-        const specificGHGlabel = 'kg CO2e/2022 USD, purchaser price';
+        const allGHGlabel = 'kg CO2e / 2022 USD goods purchased';
+        const specificGHGlabel = 'kg CO2e / 2022 USD goods purchased';
 
         return selectedData.depth === 4 ? specificGHGlabel : allGHGlabel;
       });
