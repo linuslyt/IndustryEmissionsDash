@@ -93,7 +93,7 @@ function App() {
       >
         <div className="root-grid">
           <div className="header">
-            Greenhouse Gas Emissions by NAICS-6 classification
+            2022 Supply Chain Emissions by NAICS-6 classification
           </div>
           <div className="main-grid">
             <PackedBubbleChart data={data} />
@@ -106,7 +106,7 @@ function App() {
               <div className="sidebar-item" id="stacked-chart">
                 <h3>
                   {selectedData.column
-                    ? `${selectedData.label} Emissions by ${selectedData.terminalNode ? 'Gas' : COLUMN_TO_CHART_LABEL.get(selectedData.column)}`
+                    ? `[${selectedData.naics}] ${selectedData.label} Emissions by ${selectedData.terminalNode ? 'Gas' : COLUMN_TO_CHART_LABEL.get(selectedData.column)}`
                     : `Total Emissions by Sector`}
                 </h3>
                 <StackedBarChart
