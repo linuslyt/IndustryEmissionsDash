@@ -36,6 +36,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
   }, [handleResize]);
 
   // TODO: get from selectedData.columns
+  // TODO: investigate random boxes
   // Map depth to the corresponding field names
   const map = {
     0: 'sector',

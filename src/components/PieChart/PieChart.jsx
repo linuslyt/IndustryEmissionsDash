@@ -16,7 +16,7 @@ import SelectedDataContext from '../../stores/SelectedDataContext';
 // TODO: add title
 // TODO: add percentages
 // TODO: connect select box to change pie chart between total/margin/base
-// TODO: update on resize without rerendering entire chart/resetting zoom/pan
+// TODO: update on resize without rerendering entire chart/resetting zoom/pan. https://stackoverflow.com/questions/39735367/d3-zoom-behavior-when-window-is-resized
 // TODO: change pie chart from absolute to equivalent CO2 GWP units
 
 const PieChart = ({ ghgdata }) => {
@@ -146,7 +146,6 @@ const PieChart = ({ ghgdata }) => {
       .style('border-radius', '4px')
       .style('pointer-events', 'none');
 
-    // TODO: fix tooltip distance from cursor
     const sectors = svg
       .selectAll('path')
       .data(data_ready)
@@ -170,23 +169,22 @@ const PieChart = ({ ghgdata }) => {
 
     sectors
       .on('mouseover', function (event, d) {
+        const [x, y] = d3.pointer(event);
         d3.select(this).transition().duration(200).style('opacity', 0.8);
         tooltip.transition().duration(200).style('opacity', 0.9);
-        tooltip
-          .html(
-            `<strong>Gas:</strong> ${d.data.ghg}<br><strong>Total:</strong> ${d.data.total.toLocaleString()}`,
-          )
-          .style('left', `${event.pageX}px`)
-          .style('top', `${event.pageY}px`);
+        tooltip.html(
+          `<strong>Gas:</strong> ${d.data.ghg}<br><strong>Total:</strong> ${d.data.total.toLocaleString()}`,
+        );
       })
       .on('mousemove', function (event) {
+        const [x, y] = d3.pointer(event);
         tooltip
-          .style('left', `${event.pageX}px`)
-          .style('top', `${event.pageY}px`);
+          .style('left', `${x + width / 2 + 15}px`)
+          .style('top', `${y + height / 2 + 10}px`);
       })
       .on('mouseout', function () {
         d3.select(this).transition().duration(200).style('opacity', 1);
-        tooltip.transition().duration(500).style('opacity', 0);
+        tooltip.transition().duration(50).style('opacity', 0);
       });
 
     // legend

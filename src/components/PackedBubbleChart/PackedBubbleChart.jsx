@@ -20,7 +20,7 @@ import {
 import PieChart from '../PieChart/PieChart';
 import './index.css';
 
-// TODO: update on resize without rerendering entire chart/resetting zoom/pan
+// TODO: update on resize without rerendering entire chart/resetting zoom/pan. https://stackoverflow.com/questions/39735367/d3-zoom-behavior-when-window-is-resized
 function PackedBubbleChart({ data }) {
   const { equivEmissions: totalData, naicsLabels: labels } = data;
 
@@ -132,15 +132,56 @@ function PackedBubbleChart({ data }) {
       .attr('r', (d) => Math.max(d.r, 0)) // shave off stroke width to prevent clipping
       .attr('fill', (d) => color(d.depth))
       .attr('opacity', (d) => (bubbleDisplayed(d) ? 100 : 0))
-      .attr('pointer-events', (d) => (bubbleDisplayed(d) ? 'auto' : 'none'))
-      .on('mouseover', function () {
+      .attr('pointer-events', (d) => (bubbleDisplayed(d) ? 'auto' : 'none'));
+
+    bubbles
+      .on('mouseover', function (event, d) {
+        if (!d?.data[0]) return;
         d3.select(this).attr('stroke', '#000');
+        tooltip.transition().duration(200).style('opacity', 0.9);
+        tooltip.html(
+          `<strong>${d.data[0]} - ${labels.get(d.data[0])}</strong><br>${d.value.toFixed(2)} kg CO2e per 2022 USD purchased`,
+        );
+      })
+      .on('mousemove', function (event, d) {
+        if (!d?.data[0]) return;
+
+        const transform = d3.zoomTransform(svg.node());
+
+        // Get the mouse position relative to the SVG
+        const [mouseX, mouseY] = d3.pointer(event, svg.node());
+
+        // Adjust the position with the current zoom transform
+        const x = transform.applyX(mouseX);
+        const y = transform.applyY(mouseY);
+
+        // const [x, y] = d3.pointer(event);
+        tooltip
+          .style(
+            'left',
+            `${Math.min(x + 15, size.width - tooltip.node().offsetWidth)}px`,
+          )
+          .style(
+            'top',
+            `${Math.min(y + 5, size.height - tooltip.node().offsetHeight)}px`,
+          );
       })
       .on('mouseout', function () {
         d3.select(this).attr('stroke', 'none');
+        tooltip
+          .interrupt() // Prevent tooltip from staying open if pointer exits while mouseon transition is still firing
+          .style('opacity', 0);
       })
-      .attr('stroke-width', 1)
-      .on('click', (e, d) => handleBubbleClick(e, d));
+      .attr('stroke-width', 1.5)
+      .on('click', (e, d) => {
+        // TODO: disable tooltip if target is pie chart
+        handleBubbleClick(e, d);
+      });
+
+    // // tooltip
+    const tooltip = d3.select('#tooltip');
+    //   .append('div')
+    //   .attr('id', 'tooltip2');
 
     // Add labels to leaf nodes
     const labelDivs = svg
@@ -156,7 +197,6 @@ function PackedBubbleChart({ data }) {
       .attr('pointer-events', 'none')
       .attr('opacity', (d) => (labelDisplayed(d) ? '100%' : '0%'));
 
-    // TODO: Make naics code a tooltip
     labelDivs
       .append('xhtml:div')
       .attr('class', 'label-div')
@@ -166,7 +206,7 @@ function PackedBubbleChart({ data }) {
   };
 
   function handleBubbleClick(e, b) {
-    const scale = (Math.min(size.width, size.height) * 0.9) / (b.r * 2);
+    const scale = (Math.min(size.width, size.height) * 0.95) / (b.r * 2);
     const circleHTML = e.currentTarget;
     const pieRadius = circleHTML.getAttribute('r') * scale;
     setSelectedData((prevState) => ({
@@ -188,7 +228,8 @@ function PackedBubbleChart({ data }) {
     const y = b.y;
     const r = b.r;
 
-    const scale = (Math.min(size.width, size.height) * 0.9) / (r * 2);
+    const scale =
+      (Math.min(size.width, size.height) * (b.data[0] ? 0.95 : 1)) / (r * 2);
     const dx = size.width / 2 - x * scale;
     const dy = size.height / 2 - y * scale;
 
@@ -232,7 +273,7 @@ function PackedBubbleChart({ data }) {
         // e.transform.k represents the scale factor k.
         d3.select('#bubbles')
           .selectAll('circle')
-          .attr('stroke-width', 1 / e.transform.k);
+          .attr('stroke-width', 1.5 / e.transform.k);
         d3.select('#labels')
           .selectAll('text')
           .style('font-size', (d) => `${d.r / 6 / e.transform.k}px`);
@@ -321,6 +362,7 @@ function PackedBubbleChart({ data }) {
       </Button>
       <div ref={graphRef} className="main-container">
         <PieChart ghgdata={data.allEmissions} />
+        <div id="tooltip"></div>
         <svg id="packed-bubble-chart" className="chart-container" />
       </div>
     </>

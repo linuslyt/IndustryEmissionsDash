@@ -277,9 +277,9 @@ Seq. No.,2017 NAICS US Code,2017 NAICS US Title
 275,238910,Site Preparation Contractors
 276,23899,All Other Specialty Trade Contractors
 277,238990,All Other Specialty Trade Contractors
-278,31,Manufacturing
-278,32,Manufacturing
-278,33,Manufacturing
+278,31,Manufacturing (1)
+278,32,Manufacturing (2)
+278,33,Manufacturing (3)
 279,311,Food Manufacturing
 280,3111,Animal Food Manufacturing
 281,31111,Animal Food Manufacturing
@@ -1092,8 +1092,8 @@ Seq. No.,2017 NAICS US Code,2017 NAICS US Title
 1088,425110,Business to Business Electronic Markets
 1089,42512,Wholesale Trade Agents and Brokers
 1090,425120,Wholesale Trade Agents and Brokers
-1091,44,Retail Trade
-1091,45,Retail Trade
+1091,44,Retail Trade (1)
+1091,45,Retail Trade (2)
 1092,441,Motor Vehicle and Parts Dealers
 1093,4411,Automobile Dealers
 1094,44111,New Car Dealers
@@ -1256,8 +1256,8 @@ Seq. No.,2017 NAICS US Code,2017 NAICS US Title
 1251,454310,Fuel Dealers
 1252,45439,Other Direct Selling Establishments
 1253,454390,Other Direct Selling Establishments
-1254,48,Transportation and Warehousing
-1254,49,Transportation and Warehousing
+1254,48,Transportation and Warehousing (1)
+1254,49,Transportation and Warehousing (2)
 1255,481,Air Transportation
 1256,4811,Scheduled Air Transportation
 1257,48111,Scheduled Air Transportation
