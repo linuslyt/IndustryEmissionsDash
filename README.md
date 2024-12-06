@@ -5,7 +5,9 @@ A dashboard to visualize the ['Supply Chain Greenhouse Gas Emission Factors v1.3
 Final project for ECS 272 - Information Visualization at UC Davis, Fall 2024.
 
 Created by Linus Lam and Mahima Rudrapati.
-![image](https://github.com/user-attachments/assets/25e2574b-9fb1-4b56-bfbf-2346d270f522)
+
+
+![image](https://github.com/user-attachments/assets/3dda7800-7fd0-4a37-b696-7e65ae434104)
 
 ## Usage
 
