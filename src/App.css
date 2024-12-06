@@ -39,6 +39,7 @@
 
 .sidebar-card {
   margin: 5px;
+  overflow: overlay;
 }
 
 .sidebar-grid {
@@ -79,9 +80,6 @@ h3 {
   align-items: center;
   justify-content: center;
   text-align: center;
-}
-
-#stacked-chart {
 }
 
 #gas-facts {
