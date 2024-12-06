@@ -235,7 +235,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
     chart
       .append('g')
       .attr('transform', `translate(0,30)`)
-      .call(d3.axisTop(x).ticks(width / 100, 's'))
+      .call(d3.axisTop(x).ticks(width / 100, '.2f'))
       .call((g) => g.selectAll('.domain').remove());
 
     // Vertical axis
