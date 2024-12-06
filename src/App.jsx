@@ -1,16 +1,18 @@
 import * as d3 from 'd3';
 import { useEffect, useState } from 'react';
 import './App.css';
+import GasFacts from './components/GasFacts/GasFacts';
 import PackedBubbleChart from './components/PackedBubbleChart/PackedBubbleChart';
 import StackedBarChart from './components/StackedBarChart/StackedBarChart';
 import {
+  COLUMN_TO_CHART_LABEL,
   DATAFILES,
   DEFAULT_SELECTED_DATA,
   EMISSIONS_COLUMN_NAMES,
+  GHG_FACTS,
   LABEL_COLUMN_NAMES,
 } from './consts';
 import SelectedDataContext from './stores/SelectedDataContext';
-import GasFacts from './components/GasFacts/GasFacts';
 
 function App() {
   const [data, setData] = useState({
@@ -61,6 +63,7 @@ function App() {
           PATH_TO_DATA + DATAFILES.NAICS_LABELS,
           labelsColMapper,
         );
+        console.log(GHG_FACTS);
         setData({
           allEmissions: allEmissionsData,
           equivEmissions: equivCO2EmissionsData,
@@ -90,28 +93,31 @@ function App() {
       >
         <div className="root-grid">
           <div className="header">
-            <h1>Header ribbon</h1>
+            Greenhouse Gas Emissions by NAICS-6 classification
           </div>
           <div className="main-grid">
             <PackedBubbleChart data={data} />
             {/* <PieChart ghgdata={data.allEmissions} /> The chart only shows for 'Soybean Farming using the code' */}
           </div>
-          <div className="sidebar-grid">
-            <div className="sidebar-item">
-              <h2>
-                Gas Emissions in{' '}
-                {selectedData.label ? selectedData.label : 'Sectors'}
-              </h2>
-            </div>
-            <div className="sidebar-item">
-              <StackedBarChart
-                data={data.equivEmissions}
-                ghgdata={data.allEmissions}
-                labels={data.naicsLabels}
-              />
-            </div>
-            <div className="sidebar-item">
-              <GasFacts />
+          <div className="sidebar-card">
+            <div className="sidebar-grid">
+              {/* <div className="sidebar-item">Test content</div> */}
+              <div className="sidebar-heading"></div>
+              <div className="sidebar-item" id="stacked-chart">
+                <h3>
+                  {selectedData.column
+                    ? `${selectedData.label} Emissions by ${selectedData.terminalNode ? 'Gas' : COLUMN_TO_CHART_LABEL.get(selectedData.column)}`
+                    : `Total Emissions by Sector`}
+                </h3>
+                <StackedBarChart
+                  data={data.equivEmissions}
+                  ghgdata={data.allEmissions}
+                  labels={data.naicsLabels}
+                />
+              </div>
+              <div id="gas-facts">
+                <GasFacts />
+              </div>
             </div>
           </div>
         </div>

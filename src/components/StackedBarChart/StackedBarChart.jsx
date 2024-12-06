@@ -9,8 +9,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { GHG_FACTS } from '../../consts.js';
 import SelectedDataContext from '../../stores/SelectedDataContext.js';
-
 import './StackedBarChart.css';
 
 const StackedBarChart = ({ data, ghgdata, labels }) => {
@@ -41,34 +41,37 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
     1: 'subsector',
     2: 'indGroup',
     3: 'industry',
+    4: 'naics',
   };
 
   const level = map[selectedData.depth];
-  const upperlevel =
-    selectedData.depth > 0 ? map[selectedData.depth - 1] : null;
-
-  const modifiedData = useMemo(() => {
-    return selectedData.depth === 4 ? ghgdata : data;
-  }, [selectedData.depth, ghgdata, data]);
 
   const filteredData = useMemo(() => {
-    if (selectedData.naics == null || upperlevel == null) {
-      return modifiedData;
-    } else {
-      return modifiedData.filter((d) => d[upperlevel] === selectedData.naics);
-    }
-  }, [modifiedData, selectedData.naics, upperlevel]);
+    const inspectedData = selectedData.terminalNode ? ghgdata : data;
+
+    // console.log('level', inspectedData);
+    if (selectedData.column === '') return inspectedData;
+    const filteredData = inspectedData?.filter(
+      (d) => d[selectedData.column] === selectedData.naics,
+    );
+    console.log('filtered', filteredData);
+    return filteredData;
+  }, [size, selectedData]);
 
   const aggregatedData = useMemo(() => {
     if (!filteredData || filteredData.length === 0) return [];
 
-    if (selectedData.depth === 4) {
+    if (selectedData.terminalNode) {
       const emissionsByGhg = Array.from(
         d3.rollup(
           filteredData,
           (v) => ({
-            base: d3.sum(v, (d) => d.base),
-            margin: d3.sum(v, (d) => d.margins),
+            base: d3.sum(v, (d) =>
+              parseFloat(d.base * GHG_FACTS.get(d.ghg).gwp),
+            ),
+            margin: d3.sum(v, (d) =>
+              parseFloat(d.margins * GHG_FACTS.get(d.ghg).gwp),
+            ),
           }),
           (d) => d.ghg,
         ),
@@ -145,7 +148,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
     let keys = [];
     if (selectedData.selectedEmissions === 'base') {
       keys = ['base'];
-    } else if (selectedData.selectedEmissions === 'margin') {
+    } else if (selectedData.selectedEmissions === 'margins') {
       keys = ['margin'];
     } else {
       keys = ['margin', 'base']; // note: the reverse of this is stacking improperly
@@ -156,7 +159,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
       .keys(keys)
       .order(d3.stackOrderNone)
       .offset(d3.stackOffsetNone)(aggregatedData);
-  }, [aggregatedData, selectedData.selectedEmissions]);
+  }, [aggregatedData, selectedData]);
 
   // Compute chart dimensions based on data and container size
   const width = size.width || 628;
@@ -184,7 +187,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
     return d3
       .scaleOrdinal()
       .domain(['base', 'margin'])
-      .range(['#1f77b4', '#ff7f0e']) // Specific colors for 'base' and 'margin'
+      .range(['#0e6cb6', '#ff7f0e']) // Specific colors for 'base' and 'margin'
       .unknown('#ccc');
   }, []);
 
@@ -236,11 +239,24 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
       .call((g) => g.selectAll('.domain').remove());
 
     // Vertical axis
-    chart
+    const yAxis = chart
       .append('g')
       .attr('transform', `translate(${x.range()[0]},0)`)
       .call(d3.axisLeft(y).tickSizeOuter(0))
       .call((g) => g.selectAll('.domain').remove());
+
+    yAxis
+      .selectAll('text')
+      .text((d) => {
+        // truncate label to avoid overflow. Add tooltip for full title.
+        const maxLength = 18;
+        const label = d.toString();
+        return label.length > maxLength
+          ? `${label.slice(0, maxLength)}…`
+          : label;
+      })
+      .append('title')
+      .text((d) => d);
 
     chart
       .append('text')
@@ -249,8 +265,8 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
       .attr('text-anchor', 'middle')
       .style('font-size', '14px')
       .text((d) => {
-        const allGHGlabel = 'kg CO2e/2022 USD, purchaser price';
-        const specificGHGlabel = 'kg/2022 USD, purchaser price';
+        const allGHGlabel = 'kg CO2e / 2022 USD goods purchased';
+        const specificGHGlabel = 'kg CO2e / 2022 USD goods purchased';
 
         return selectedData.depth === 4 ? specificGHGlabel : allGHGlabel;
       });
@@ -263,7 +279,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
 
     const legendGroup = chart
       .append('g')
-      .attr('transform', `translate(${width - 370}, -40)`); // adjust as needed
+      .attr('transform', `translate(0, -40)`);
 
     activeKeys.forEach((key, i) => {
       const legendRow = legendGroup
@@ -298,16 +314,6 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
       ) : (
         <svg ref={svgRef}></svg>
       )}
-      <div>Selected area: {selectedData.naics}</div>
-      <div>Area title: {selectedData.label}</div>
-      <div>
-        Hierarchy depth (0 = all industries, 1 = sector, 2 = subsector, etc.):
-        {selectedData.depth}
-      </div>
-      <div>
-        Data to display ('margin', 'base', 'all'):{' '}
-        {selectedData.selectedEmissions}
-      </div>
     </div>
   );
 };

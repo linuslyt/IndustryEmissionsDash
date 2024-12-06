@@ -2,12 +2,13 @@
   display: grid;
   /* Changed from four equal columns to three 20% and one 40% */
   grid-template-columns: 20% 20% 25% 35%;
-  grid-template-rows: 100px auto;
+  grid-template-rows: 5% auto;
   grid-template-areas:
     'hd hd hd hd'
     'mn mn mn sd';
   height: 100vh;
   width: 100vw;
+  background-color: whitesmoke;
 }
 
 .header {
@@ -15,8 +16,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
-  background-color: lightseagreen;
+  font-size: 3vh;
+  font-weight: 300;
+  height: 100%;
+  line-height: 100%;
+  background-color: #0e6cb6;
+  color: ghostwhite;
 }
 
 .main-grid {
@@ -25,7 +30,6 @@
   justify-content: center;
   align-items: center;
   grid-area: mn;
-  background-color: ghostwhite;
   padding: 5px;
   margin: 0px;
   width: 100%;
@@ -33,32 +37,53 @@
   overflow: hidden;
 }
 
+.sidebar-card {
+  margin: 5px;
+  overflow: overlay;
+}
+
 .sidebar-grid {
-  padding: 20px;
+  padding: 4%;
   height: 100%;
   width: 100%;
   display: flex;
   flex-direction: column;
   grid-area: sd;
   grid-template-rows: 100px repeat(3, 1fr);
-  row-gap: 20px;
-  background-color: darkgray;
+  position: relative;
+  overflow: overlay;
+  border-radius: 15px;
+  border: 2px;
+  background-color: white;
 }
 
 .sidebar-item {
-  padding: 10px;
   /* height: 100%; */
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: start;
+  flex-direction: column;
+}
+
+h3 {
+  padding: 0px;
+  margin: 0px;
+  margin-bottom: 0.5em;
 }
 
 .sidebar-heading {
-  height: 50%;
+  height: fit-content;
   width: 100%;
-  line-height: 0%;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
+}
+
+#gas-facts {
+  margin-top: auto;
+  height: 40%;
+  width: 100%;
 }

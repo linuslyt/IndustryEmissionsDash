@@ -9,15 +9,12 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { GHG_FACTS } from '../../consts';
 import SelectedDataContext from '../../stores/SelectedDataContext';
 
 // get x, y, r from selected Bubble. pass as prop.
 // get total vs base emission from select. pass as prop.
-// TODO: add title
-// TODO: add percentages
-// TODO: connect select box to change pie chart between total/margin/base
-// TODO: update on resize without rerendering entire chart/resetting zoom/pan
-// TODO: change pie chart from absolute to equivalent CO2 GWP units
+// TODO: update on resize without rerendering entire chart/resetting zoom/pan. https://stackoverflow.com/questions/39735367/d3-zoom-behavior-when-window-is-resized
 
 const PieChart = ({ ghgdata }) => {
   const { selectedData, setSelectedData } = useContext(SelectedDataContext);
@@ -61,7 +58,11 @@ const PieChart = ({ ghgdata }) => {
 
     const emissionsByGHG = filteredData.map((d) => ({
       ghg: d.ghg,
-      total: parseFloat(d.total),
+      // Convert to equivalent CO2 amounts, i.e. CO2e units.
+      // CO2e = Mass of GHG x GWP. 100-year GWP values from the 2014 IPCC 5th report (AR5) were used.
+      total: parseFloat(
+        d[selectedData.selectedEmissions] * GHG_FACTS.get(d.ghg).gwp,
+      ),
     }));
 
     const totalEmissions = d3.sum(emissionsByGHG, (d) => d.total);
@@ -84,9 +85,8 @@ const PieChart = ({ ghgdata }) => {
       finalData.push({ ghg: 'Other gases', total: otherTotal });
     }
 
-    console.log(filteredData);
     return finalData;
-  }, [ghgdata, selectedData]);
+  }, [ghgdata, selectedData.naics, selectedData.selectedEmissions]);
 
   useEffect(() => {
     d3.select(svgRef.current).selectAll('*').remove();
@@ -108,7 +108,7 @@ const PieChart = ({ ghgdata }) => {
     const legendGroup = d3
       .select(svgRef.current)
       .append('g')
-      .attr('transform', `translate(${width * 0.75}, ${height * 0.825})`)
+      .attr('transform', `translate(${width * 0.82}, ${height * 0.8})`)
       .style('opacity', 0);
 
     legendGroup
@@ -116,22 +116,24 @@ const PieChart = ({ ghgdata }) => {
       .delay(500) // Duration of the fade-in effect
       .duration(500)
       .style('opacity', selectedData.terminalNode * 100);
-    // TODO: make this consistent for all GHG types
     const color = d3
       .scaleOrdinal()
-      .domain(aggregatedData.map((d) => d.ghg))
-      .range(d3.schemeCategory10);
+      .domain(Array.from(new Set(aggregatedData.map((d) => d.ghg).sort())))
+      .range(d3.schemeTableau10);
 
     // pie generator
     const pie = d3
       .pie()
-      .value((d) => d.total)
-      .sort(null);
+      .value((d) => {
+        console.log('slice', d);
+        return d.total;
+      })
+      .sort((a, b) => b.total - a.total);
 
     const data_ready = pie(aggregatedData);
 
     // arc generator
-    const arc = d3.arc().innerRadius(0).outerRadius(radius);
+    const arc = d3.arc().innerRadius(1).outerRadius(radius);
 
     // tooltip
     const tooltip = d3
@@ -146,7 +148,6 @@ const PieChart = ({ ghgdata }) => {
       .style('border-radius', '4px')
       .style('pointer-events', 'none');
 
-    // TODO: fix tooltip distance from cursor
     const sectors = svg
       .selectAll('path')
       .data(data_ready)
@@ -154,8 +155,8 @@ const PieChart = ({ ghgdata }) => {
       .append('path')
       .attr('d', arc)
       .attr('fill', (d) => color(d.data.ghg))
-      .attr('stroke', 'white')
-      .style('stroke-width', '0px')
+      .attr('stroke', (d) => color(d.data.ghg))
+      .style('stroke-width', '1px')
       .style('pointer-events', 'none')
       .style('opacity', 0);
 
@@ -170,23 +171,34 @@ const PieChart = ({ ghgdata }) => {
 
     sectors
       .on('mouseover', function (event, d) {
+        const [x, y] = d3.pointer(event);
         d3.select(this).transition().duration(200).style('opacity', 0.8);
         tooltip.transition().duration(200).style('opacity', 0.9);
-        tooltip
-          .html(
-            `<strong>Gas:</strong> ${d.data.ghg}<br><strong>Total:</strong> ${d.data.total.toLocaleString()}`,
-          )
-          .style('left', `${event.pageX}px`)
-          .style('top', `${event.pageY}px`);
+        tooltip.html(
+          `<div><strong>Emitted Gas:</strong> ${d.data.ghg}
+          <br><strong>Percent emissions:</strong> ${(((d.endAngle - d.startAngle) / (2 * Math.PI)) * 100).toFixed(2)}%
+          <br><strong>Total emissions:</strong> ${d.data.total.toLocaleString()} kg CO2e/2022 USD goods purchased` +
+            `${d.data.ghg === 'Other gases' ? '' : '<br>Click to examine gas facts in side panel.</div>'}`,
+        );
       })
       .on('mousemove', function (event) {
+        const [x, y] = d3.pointer(event);
         tooltip
-          .style('left', `${event.pageX}px`)
-          .style('top', `${event.pageY}px`);
+          .style('left', `${x + width / 2 + 15}px`)
+          .style('top', `${y + height / 2 + 10}px`);
       })
       .on('mouseout', function () {
         d3.select(this).transition().duration(200).style('opacity', 1);
-        tooltip.transition().duration(500).style('opacity', 0);
+        tooltip.transition().duration(50).style('opacity', 0);
+      })
+      .on('click', function (e, d) {
+        console.log(d);
+        if (!d || !d.data || !d.data.ghg || d.data.ghg === 'Other gases')
+          return;
+        setSelectedData((prevData) => ({
+          ...prevData,
+          selectedGas: d.data.ghg,
+        }));
       });
 
     // legend
@@ -229,7 +241,7 @@ const PieChart = ({ ghgdata }) => {
         position: 'absolute',
         top: 0,
         left: 0,
-        zIndex: 999,
+        zIndex: 99,
         pointerEvents: 'none',
       }}
     >
@@ -237,7 +249,6 @@ const PieChart = ({ ghgdata }) => {
       <style>{`
         .tooltip {
           position: absolute;
-          text-align: center;
           padding: 8px;
           font-size: 14px;
           background: rgba(0, 0, 0, 0.7);
