@@ -119,7 +119,7 @@ const PieChart = ({ ghgdata }) => {
     const color = d3
       .scaleOrdinal()
       .domain(Array.from(new Set(aggregatedData.map((d) => d.ghg).sort())))
-      .range(d3.schemeCategory10);
+      .range(d3.schemeTableau10);
 
     // pie generator
     const pie = d3

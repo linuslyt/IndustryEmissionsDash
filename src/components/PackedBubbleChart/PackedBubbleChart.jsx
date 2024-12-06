@@ -30,11 +30,9 @@ function PackedBubbleChart({ data }) {
   const bubbleDisplayed = (d) => d.depth <= selectedBubble.depth + 1;
   const labelDisplayed = (d) => d.depth === selectedBubble.depth + 1;
   const color = d3
-    .scaleLinear()
-    .domain([0, 5])
-    .range(['hsl(152,80%,80%)', 'hsl(228,30%,40%)']) // TODO: placeholder color scheme. replace as necessary
-    .interpolate(d3.interpolateHcl);
-
+    .scaleOrdinal()
+    .domain([0, 1, 2, 3, 4, 5])
+    .range(d3.schemeGreys[9]); // set range to 9 so the final colors aren't black
   function getNaicsLevel(naics) {
     if (!naics) return;
     const depthToColumnMap = [

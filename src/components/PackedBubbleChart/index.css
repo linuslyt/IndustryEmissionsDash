@@ -3,10 +3,11 @@
   height: 100%;
   border-width: 2px;
   border-style: solid;
-  border-color: ghostwhite;
+  border-color: white;
   border-radius: 15px;
   overflow: hidden;
   position: relative;
+  background-color: white;
 }
 
 #zoom-container {

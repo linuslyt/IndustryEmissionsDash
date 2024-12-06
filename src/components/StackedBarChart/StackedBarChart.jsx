@@ -187,7 +187,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
     return d3
       .scaleOrdinal()
       .domain(['base', 'margin'])
-      .range(['#1f77b4', '#ff7f0e']) // Specific colors for 'base' and 'margin'
+      .range(['#0e6cb6', '#ff7f0e']) // Specific colors for 'base' and 'margin'
       .unknown('#ccc');
   }, []);
 
