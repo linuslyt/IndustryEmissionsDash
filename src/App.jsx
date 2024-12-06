@@ -22,7 +22,7 @@ function App() {
 
   const [selectedData, setSelectedData] = useState(DEFAULT_SELECTED_DATA);
 
-  // TODO: style
+  // TODO: style, replace placeholder title
   useEffect(() => {
     const readCSV = async () => {
       const emissionsColMapper = (r) => {

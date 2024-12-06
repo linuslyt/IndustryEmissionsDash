@@ -175,7 +175,9 @@ function PackedBubbleChart({ data }) {
       })
       .attr('stroke-width', 1.5)
       .on('click', (e, d) => {
-        // TODO: disable tooltip if target is pie chart
+        // Briefly disable tooltip. Mainly so the overlaid pie chart tooltip shows up first.
+        tooltip.transition().duration(100).style('opacity', 0);
+
         handleBubbleClick(e, d);
       });
 

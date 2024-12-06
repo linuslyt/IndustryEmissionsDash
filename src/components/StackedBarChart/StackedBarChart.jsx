@@ -13,9 +13,6 @@ import { GHG_FACTS } from '../../consts.js';
 import SelectedDataContext from '../../stores/SelectedDataContext.js';
 import './StackedBarChart.css';
 
-// TODO: update legend position.
-// TODO: center align title
-
 const StackedBarChart = ({ data, ghgdata, labels }) => {
   const svgRef = useRef(null);
   const graphRef = useRef(null);
@@ -282,7 +279,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
 
     const legendGroup = chart
       .append('g')
-      .attr('transform', `translate(${width - 370}, -40)`); // adjust as needed
+      .attr('transform', `translate(0, -40)`);
 
     activeKeys.forEach((key, i) => {
       const legendRow = legendGroup
