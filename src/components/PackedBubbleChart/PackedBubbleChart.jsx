@@ -27,7 +27,7 @@ function PackedBubbleChart({ data }) {
   const [selectedBubble, setSelectedBubble] = useState(null);
   const { selectedData, setSelectedData } = useContext(SelectedDataContext);
   const bubbleDisplayed = (d) => d.depth <= selectedBubble.depth + 1;
-  const labelDisplayed = (d) => d.depth === selectedBubble.depth + 1; // TODO: hide if font size < 1. move to tooltip.
+  const labelDisplayed = (d) => d.depth === selectedBubble.depth + 1;
   const color = d3
     .scaleLinear()
     .domain([0, 5])
@@ -129,7 +129,7 @@ function PackedBubbleChart({ data }) {
       .join('circle')
       .attr('cx', (d) => d.x)
       .attr('cy', (d) => d.y)
-      .attr('r', (d) => Math.max(d.r - 1, 0)) // shave off stroke width to prevent clipping
+      .attr('r', (d) => Math.max(d.r, 0)) // shave off stroke width to prevent clipping
       .attr('fill', (d) => color(d.depth))
       .attr('opacity', (d) => (bubbleDisplayed(d) ? 100 : 0))
       .attr('pointer-events', (d) => (bubbleDisplayed(d) ? 'auto' : 'none'))
@@ -154,19 +154,19 @@ function PackedBubbleChart({ data }) {
       .attr('width', (d) => (2 * d.r) / Math.sqrt(2))
       .attr('height', (d) => (2 * d.r) / Math.sqrt(2))
       .attr('pointer-events', 'none')
-      .attr('display', (d) => (labelDisplayed(d) ? 'auto' : 'none'));
+      .attr('opacity', (d) => (labelDisplayed(d) ? '100%' : '0%'));
 
     // TODO: Make naics code a tooltip
     labelDivs
       .append('xhtml:div')
       .attr('class', 'label-div')
-      .style('font-size', (d) => `${d.r / 6}px`)
-      .text((d) => labels.get(d.data[0])); // make labels click-through
+      .style('font-size', (d) => `${Math.max(d.r / 6, 1)}px`)
+      .text((d) => (d.r / 6 > 1 ? labels.get(d.data[0]) : '...')); // Clamp labels to 1px minimum, move to tooltip
     return svgRoot;
   };
 
   function handleBubbleClick(e, b) {
-    const scale = Math.min(size.width, size.height) / (b.r * 2);
+    const scale = (Math.min(size.width, size.height) * 0.9) / (b.r * 2);
     const circleHTML = e.currentTarget;
     const pieRadius = circleHTML.getAttribute('r') * scale;
     setSelectedData((prevState) => ({
@@ -188,7 +188,7 @@ function PackedBubbleChart({ data }) {
     const y = b.y;
     const r = b.r;
 
-    const scale = Math.min(size.width, size.height) / (r * 2);
+    const scale = (Math.min(size.width, size.height) * 0.9) / (r * 2);
     const dx = size.width / 2 - x * scale;
     const dy = size.height / 2 - y * scale;
 
@@ -205,14 +205,14 @@ function PackedBubbleChart({ data }) {
       .selectAll('circle')
       .transition()
       .duration(500)
-      .attr('opacity', (d) => (bubbleDisplayed(d) ? 100 : 0))
+      .attr('opacity', (d) => (bubbleDisplayed(d) ? '100%' : '0%'))
       .attr('pointer-events', (d) => (bubbleDisplayed(d) ? 'auto' : 'none'));
 
     d3.select('#labels')
       .selectAll('foreignObject')
       .transition()
       .duration(250)
-      .attr('display', (d) => (labelDisplayed(d) ? 'auto' : 'none'));
+      .attr('opacity', (d) => (labelDisplayed(d) ? '100%' : '0%'));
   }, [selectedBubble]);
 
   const svgRoot = useMemo(() => {
@@ -240,7 +240,6 @@ function PackedBubbleChart({ data }) {
 
     svgRoot.call(zoom).on('.zoom', null);
     svgRoot.node().zoom = zoom;
-    // .on('wheel.zoom', null);
     return zoom;
   }, [svgRoot]);
 

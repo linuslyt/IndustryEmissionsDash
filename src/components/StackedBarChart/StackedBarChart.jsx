@@ -35,6 +35,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
     };
   }, [handleResize]);
 
+  // TODO: get from selectedData.columns
   // Map depth to the corresponding field names
   const map = {
     0: 'sector',
@@ -236,11 +237,24 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
       .call((g) => g.selectAll('.domain').remove());
 
     // Vertical axis
-    chart
+    const yAxis = chart
       .append('g')
       .attr('transform', `translate(${x.range()[0]},0)`)
       .call(d3.axisLeft(y).tickSizeOuter(0))
       .call((g) => g.selectAll('.domain').remove());
+
+    yAxis
+      .selectAll('text')
+      .text((d) => {
+        // truncate label to avoid overflow. Add tooltip for full title.
+        const maxLength = 18;
+        const label = d.toString();
+        return label.length > maxLength
+          ? `${label.slice(0, maxLength)}…`
+          : label;
+      })
+      .append('title')
+      .text((d) => d);
 
     chart
       .append('text')
@@ -298,16 +312,6 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
       ) : (
         <svg ref={svgRef}></svg>
       )}
-      <div>Selected area: {selectedData.naics}</div>
-      <div>Area title: {selectedData.label}</div>
-      <div>
-        Hierarchy depth (0 = all industries, 1 = sector, 2 = subsector, etc.):
-        {selectedData.depth}
-      </div>
-      <div>
-        Data to display ('margin', 'base', 'all'):{' '}
-        {selectedData.selectedEmissions}
-      </div>
     </div>
   );
 };

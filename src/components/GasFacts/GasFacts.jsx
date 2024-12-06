@@ -1,6 +1,8 @@
 import React from 'react';
 import './GasFacts.css';
 
+// TODO: collect gas facts
+
 const GasFacts = () => {
   return (
     <div className="card-container">

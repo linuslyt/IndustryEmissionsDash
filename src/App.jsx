@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import { useEffect, useState } from 'react';
 import './App.css';
+import GasFacts from './components/GasFacts/GasFacts';
 import PackedBubbleChart from './components/PackedBubbleChart/PackedBubbleChart';
 import StackedBarChart from './components/StackedBarChart/StackedBarChart';
 import {
@@ -10,7 +11,6 @@ import {
   LABEL_COLUMN_NAMES,
 } from './consts';
 import SelectedDataContext from './stores/SelectedDataContext';
-import GasFacts from './components/GasFacts/GasFacts';
 
 function App() {
   const [data, setData] = useState({
@@ -21,6 +21,7 @@ function App() {
 
   const [selectedData, setSelectedData] = useState(DEFAULT_SELECTED_DATA);
 
+  // TODO: style
   useEffect(() => {
     const readCSV = async () => {
       const emissionsColMapper = (r) => {
@@ -80,6 +81,7 @@ function App() {
     // data.allEmissions && console.log(data);
   }, [data]);
 
+  // TODO: fix position of gas facts
   return (
     <>
       <SelectedDataContext.Provider
