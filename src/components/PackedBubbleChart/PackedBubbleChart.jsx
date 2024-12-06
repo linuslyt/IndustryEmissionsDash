@@ -141,7 +141,7 @@ function PackedBubbleChart({ data }) {
         d3.select(this).attr('stroke', '#000');
         tooltip.transition().duration(200).style('opacity', 0.9);
         tooltip.html(
-          `<strong>${d.data[0]} - ${labels.get(d.data[0])}</strong><br>${d.value.toFixed(2)} kg CO2e per 2022 USD purchased`,
+          `<strong>${d.data[0]} - ${labels.get(d.data[0])}</strong><br>${d.value.toFixed(2)} kg CO2e / 2022 USD purchased`,
         );
       })
       .on('mousemove', function (event, d) {

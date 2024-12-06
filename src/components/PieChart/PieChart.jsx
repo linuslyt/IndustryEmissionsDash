@@ -109,7 +109,7 @@ const PieChart = ({ ghgdata }) => {
     const legendGroup = d3
       .select(svgRef.current)
       .append('g')
-      .attr('transform', `translate(${width * 0.85}, ${height * 0.85})`)
+      .attr('transform', `translate(${width * 0.88}, ${height * 0.8})`)
       .style('opacity', 0);
 
     legendGroup
@@ -176,7 +176,10 @@ const PieChart = ({ ghgdata }) => {
         d3.select(this).transition().duration(200).style('opacity', 0.8);
         tooltip.transition().duration(200).style('opacity', 0.9);
         tooltip.html(
-          `<strong>Gas:</strong> ${d.data.ghg}<br><strong>Total:</strong> ${d.data.total.toLocaleString()}`,
+          `<div><strong>Emitted Gas:</strong> ${d.data.ghg}
+          <br><strong>Percent emissions:</strong> ${(((d.endAngle - d.startAngle) / (2 * Math.PI)) * 100).toFixed(2)}%
+          <br><strong>Total emissions:</strong> ${d.data.total.toLocaleString()} kg CO2e/2022 USD` +
+            `${d.data.ghg === 'Other gases' ? '' : '<br>Click to examine gas facts in side panel.</div>'}`,
         );
       })
       .on('mousemove', function (event) {
@@ -190,6 +193,7 @@ const PieChart = ({ ghgdata }) => {
         tooltip.transition().duration(50).style('opacity', 0);
       })
       .on('click', function (e, d) {
+        console.log(d);
         if (!d || !d.data || !d.data.ghg || d.data.ghg === 'Other gases')
           return;
         setSelectedData((prevData) => ({
@@ -246,7 +250,6 @@ const PieChart = ({ ghgdata }) => {
       <style>{`
         .tooltip {
           position: absolute;
-          text-align: center;
           padding: 8px;
           font-size: 14px;
           background: rgba(0, 0, 0, 0.7);
