@@ -42,7 +42,7 @@ export const DEFAULT_SELECTED_DATA = {
   depth: 0,
   label: '',
   terminalNode: false,
-  column: 'sector',
+  column: '',
   pieRadius: 0,
   selectedEmissions: 'total',
 };

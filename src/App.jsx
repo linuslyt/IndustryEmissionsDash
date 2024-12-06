@@ -112,7 +112,7 @@ function App() {
                 labels={data.naicsLabels}
               />
             </div>
-            <div className="sidebar-item">
+            <div className="sidebar-item" className="gas-facts">
               <GasFacts />
             </div>
           </div>

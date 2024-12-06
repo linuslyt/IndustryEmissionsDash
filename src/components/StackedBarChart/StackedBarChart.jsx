@@ -43,28 +43,27 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
     1: 'subsector',
     2: 'indGroup',
     3: 'industry',
+    4: 'naics',
   };
 
   const level = map[selectedData.depth];
-  const upperlevel =
-    selectedData.depth > 0 ? map[selectedData.depth - 1] : null;
-
-  const modifiedData = useMemo(() => {
-    return selectedData.depth === 4 ? ghgdata : data;
-  }, [selectedData.depth, ghgdata, data]);
 
   const filteredData = useMemo(() => {
-    if (selectedData.naics == null || upperlevel == null) {
-      return modifiedData;
-    } else {
-      return modifiedData.filter((d) => d[upperlevel] === selectedData.naics);
-    }
-  }, [modifiedData, selectedData.naics, upperlevel]);
+    const inspectedData = selectedData.terminalNode ? ghgdata : data;
+
+    // console.log('level', inspectedData);
+    if (selectedData.column === '') return inspectedData;
+    const filteredData = inspectedData?.filter(
+      (d) => d[selectedData.column] === selectedData.naics,
+    );
+    console.log('filtered', filteredData);
+    return filteredData;
+  }, [size, selectedData]);
 
   const aggregatedData = useMemo(() => {
     if (!filteredData || filteredData.length === 0) return [];
 
-    if (selectedData.depth === 4) {
+    if (selectedData.terminalNode) {
       const emissionsByGhg = Array.from(
         d3.rollup(
           filteredData,
@@ -158,7 +157,7 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
       .keys(keys)
       .order(d3.stackOrderNone)
       .offset(d3.stackOffsetNone)(aggregatedData);
-  }, [aggregatedData, selectedData.selectedEmissions]);
+  }, [aggregatedData, selectedData]);
 
   // Compute chart dimensions based on data and container size
   const width = size.width || 628;
