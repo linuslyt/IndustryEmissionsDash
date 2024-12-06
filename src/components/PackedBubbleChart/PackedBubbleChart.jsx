@@ -13,13 +13,18 @@ import {
 import Select from 'react-select';
 import SelectedDataContext from '../../stores/SelectedDataContext';
 
+import {
+  DEFAULT_SELECTED_DATA,
+  SELECTED_EMISSIONS_DROPDOWN_OPTIONS,
+} from '../../consts';
+import PieChart from '../PieChart/PieChart';
 import './index.css';
 
-// TODO: add buttons for return to root/recenter at selected node in corner
-// TODO: If no children set opacity to 0 and display pie chart instead.
+// TODO: update on resize without rerendering entire chart/resetting zoom/pan
+function PackedBubbleChart({ data }) {
+  const { equivEmissions: totalData, naicsLabels: labels } = data;
 
-function PackedBubbleChart({ data, labels }) {
-  const [selectedBubble, setSelectedBubble] = useState(null); // TODO: hoist into react context to allow for use in other components
+  const [selectedBubble, setSelectedBubble] = useState(null);
   const { selectedData, setSelectedData } = useContext(SelectedDataContext);
   const bubbleDisplayed = (d) => d.depth <= selectedBubble.depth + 1;
   const labelDisplayed = (d) => d.depth === selectedBubble.depth + 1; // TODO: hide if font size < 1. move to tooltip.
@@ -29,10 +34,25 @@ function PackedBubbleChart({ data, labels }) {
     .range(['hsl(152,80%,80%)', 'hsl(228,30%,40%)']) // TODO: placeholder color scheme. replace as necessary
     .interpolate(d3.interpolateHcl);
 
+  function getNaicsLevel(naics) {
+    if (!naics) return;
+    const depthToColumnMap = [
+      'naics', // 6 full digits, 0 trailing zeroes
+      'industry', // 5 full digits, 1 trailing zero
+      'indGroup', // etc
+      'subsector',
+      'sector',
+    ];
+
+    // Count trailing zeroes to get NAICS level
+    const trailingZeroes = naics.match(/0+$/);
+    return depthToColumnMap[trailingZeroes ? trailingZeroes[0].length : 0];
+  }
+
   const hierarchyData = useMemo(() => {
-    if (isEmpty(data)) return;
+    if (isEmpty(totalData)) return;
     const emissionsBySector = d3.rollup(
-      data,
+      totalData,
       (v) => d3.sum(v, (d) => d.total),
       (d) => d.sector,
       (d) => d.subsector,
@@ -65,17 +85,7 @@ function PackedBubbleChart({ data, labels }) {
     flattenSingleChildren(root);
     setSelectedBubble(root);
     return root;
-  }, [data]);
-
-  useEffect(() => {
-    if (!selectedBubble || !selectedBubble.data) return;
-    setSelectedData({
-      ...selectedData,
-      naics: selectedBubble.data[0],
-      depth: selectedBubble.depth,
-      label: labels.get(selectedBubble.data[0]),
-    });
-  }, [selectedBubble]);
+  }, [totalData]);
 
   const [size, setSize] = useState({ width: 0, height: 0 });
   const graphRef = useRef(null); // When ref is created as null, React will map it to the JSX node it's assigned to on render.
@@ -96,7 +106,9 @@ function PackedBubbleChart({ data, labels }) {
     if (!hierarchyData) return;
     if (size.width === 0) return;
     const pack = d3.pack().size([size.width, size.height]).padding(1);
-    const root = hierarchyData.copy();
+    const root = hierarchyData
+      .copy()
+      .each((n) => (n.column = getNaicsLevel(n.data[0])));
     pack(root);
     // console.log(size.width, size.height);
     // console.log(root);
@@ -128,7 +140,7 @@ function PackedBubbleChart({ data, labels }) {
         d3.select(this).attr('stroke', 'none');
       })
       .attr('stroke-width', 1)
-      .on('click', (e, d) => zoomAndCenterBubble(d));
+      .on('click', (e, d) => handleBubbleClick(e, d));
 
     // Add labels to leaf nodes
     const labelDivs = svg
@@ -153,9 +165,25 @@ function PackedBubbleChart({ data, labels }) {
     return svgRoot;
   };
 
+  function handleBubbleClick(e, b) {
+    const scale = Math.min(size.width, size.height) / (b.r * 2);
+    const circleHTML = e.currentTarget;
+    const pieRadius = circleHTML.getAttribute('r') * scale;
+    setSelectedData((prevState) => ({
+      ...prevState,
+      naics: b.data[0],
+      depth: b.depth,
+      label: labels.get(b.data[0]),
+      terminalNode: !('children' in b),
+      column: b.column,
+      pieRadius: pieRadius,
+    }));
+    zoomAndCenterBubble(b);
+  }
+
   function zoomAndCenterBubble(b) {
+    if (!b) return;
     setSelectedBubble(b);
-    console.log('zooming to bubble', b);
     const x = b.x;
     const y = b.y;
     const r = b.r;
@@ -163,6 +191,8 @@ function PackedBubbleChart({ data, labels }) {
     const scale = Math.min(size.width, size.height) / (r * 2);
     const dx = size.width / 2 - x * scale;
     const dy = size.height / 2 - y * scale;
+
+    console.log('zooming to bubble', b);
 
     svgRoot
       .transition()
@@ -189,14 +219,13 @@ function PackedBubbleChart({ data, labels }) {
     // console.log('rerendering');
     d3.select('#packed-bubble-chart').selectAll('*').remove();
     return renderGraph();
-  }, [data, size]);
+  }, [totalData, size]);
 
   const zoom = useMemo(() => {
     if (!svgRoot) return;
     const zoom = d3
       .zoom()
-      .scaleExtent([0.5, 50])
-      // TODO: smooth zoom even more. See https://observablehq.com/@d3/programmatic-zoom
+      .scaleExtent([0.5, 150])
       .on('zoom', (e) => {
         d3.select('#zoom-container').attr('transform', e.transform);
         // Scale borders by inverse of zoom scale so the stroke width is constant.
@@ -209,27 +238,11 @@ function PackedBubbleChart({ data, labels }) {
           .style('font-size', (d) => `${d.r / 6 / e.transform.k}px`);
       });
 
-    svgRoot.call(zoom);
+    svgRoot.call(zoom).on('.zoom', null);
     svgRoot.node().zoom = zoom;
     // .on('wheel.zoom', null);
     return zoom;
   }, [svgRoot]);
-
-  // For react-select
-  const selectedEmissionsOptions = [
-    {
-      label: 'Total emissions',
-      value: 'all',
-    },
-    {
-      label: 'Production emissions',
-      value: 'base',
-    },
-    {
-      label: 'Margins emissions',
-      value: 'margin',
-    },
-  ];
 
   // https://github.com/JedWatson/react-select/issues/4201#issuecomment-874098561
   const reactSelectStyle = {
@@ -245,21 +258,44 @@ function PackedBubbleChart({ data, labels }) {
     }),
   };
 
-  const handleReset = () => {
+  function handleReset() {
     svgRoot.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+    setSelectedData((prevState) => ({
+      ...DEFAULT_SELECTED_DATA,
+      selectedEmissions: prevState.selectedEmissions,
+    }));
     setSelectedBubble(hierarchyData);
-  };
+  }
+
+  function handleGoUp() {
+    const b = selectedBubble.parent;
+    setSelectedData((prevState) => ({
+      ...prevState,
+      naics: b.data[0],
+      depth: b.depth,
+      label: labels.get(b.data[0]),
+      terminalNode: false,
+      column: b.column,
+      pieRadius: 0,
+    }));
+
+    zoomAndCenterBubble(b);
+  }
+
   return (
     <>
       <Select
-        options={selectedEmissionsOptions}
-        value={selectedEmissionsOptions.label}
+        options={SELECTED_EMISSIONS_DROPDOWN_OPTIONS}
+        value={SELECTED_EMISSIONS_DROPDOWN_OPTIONS.label}
         menuPortalTarget={document.body}
         onChange={(e) =>
-          setSelectedData({ ...selectedData, selectedEmissions: e.value })
+          setSelectedData((prevState) => ({
+            ...prevState,
+            selectedEmissions: e.value,
+          }))
         }
+        defaultValue={SELECTED_EMISSIONS_DROPDOWN_OPTIONS[0]}
         styles={reactSelectStyle}
-        defaultValue={selectedEmissionsOptions[0]}
       />
       <Button
         variant="contained"
@@ -274,7 +310,8 @@ function PackedBubbleChart({ data, labels }) {
       </Button>
       <Button
         variant="contained"
-        onClick={() => zoomAndCenterBubble(selectedBubble.parent)}
+        disabled={!selectedBubble?.parent}
+        onClick={handleGoUp}
         style={{
           whiteSpace: 'nowrap',
           minWidth: 'auto',
@@ -284,6 +321,7 @@ function PackedBubbleChart({ data, labels }) {
         Go to parent
       </Button>
       <div ref={graphRef} className="main-container">
+        <PieChart ghgdata={data.allEmissions} />
         <svg id="packed-bubble-chart" className="chart-container" />
       </div>
     </>
