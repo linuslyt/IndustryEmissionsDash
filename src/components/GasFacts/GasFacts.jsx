@@ -2,7 +2,8 @@ import React from 'react';
 import './GasFacts.css';
 
 // TODO: collect gas facts
-
+// TODO: select dropdown for diff gases
+// TODO: hook up pie chart sector click to set selected Gas
 const GasFacts = () => {
   return (
     <div className="card-container">

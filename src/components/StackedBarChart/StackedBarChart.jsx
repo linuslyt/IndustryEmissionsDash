@@ -13,6 +13,9 @@ import SelectedDataContext from '../../stores/SelectedDataContext.js';
 
 import './StackedBarChart.css';
 
+// TODO: update legend position.
+// TODO: center align title
+
 const StackedBarChart = ({ data, ghgdata, labels }) => {
   const svgRef = useRef(null);
   const graphRef = useRef(null);
@@ -35,8 +38,6 @@ const StackedBarChart = ({ data, ghgdata, labels }) => {
     };
   }, [handleResize]);
 
-  // TODO: get from selectedData.columns
-  // TODO: investigate random boxes
   // Map depth to the corresponding field names
   const map = {
     0: 'sector',

@@ -14,10 +14,10 @@ import SelectedDataContext from '../../stores/SelectedDataContext';
 // get x, y, r from selected Bubble. pass as prop.
 // get total vs base emission from select. pass as prop.
 // TODO: add title
-// TODO: add percentages
+// TODO: convert numbers to % of total GWP impact. Use 100-year GWP values from the 2014 IPCC 5th report (AR5).
 // TODO: connect select box to change pie chart between total/margin/base
 // TODO: update on resize without rerendering entire chart/resetting zoom/pan. https://stackoverflow.com/questions/39735367/d3-zoom-behavior-when-window-is-resized
-// TODO: change pie chart from absolute to equivalent CO2 GWP units
+// TODO: add opaque background to legend
 
 const PieChart = ({ ghgdata }) => {
   const { selectedData, setSelectedData } = useContext(SelectedDataContext);

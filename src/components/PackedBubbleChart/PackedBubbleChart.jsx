@@ -201,7 +201,7 @@ function PackedBubbleChart({ data }) {
       .append('xhtml:div')
       .attr('class', 'label-div')
       .style('font-size', (d) => `${Math.max(d.r / 6, 1)}px`)
-      .text((d) => (d.r / 6 > 1 ? labels.get(d.data[0]) : '...')); // Clamp labels to 1px minimum, move to tooltip
+      .text((d) => (d.r / 6 > 1 ? labels.get(d.data[0]) : `[${d.data[0]}]`)); // Clamp labels to 1px minimum, move to tooltip
     return svgRoot;
   };
 
