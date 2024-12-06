@@ -8,6 +8,7 @@ import {
   DATAFILES,
   DEFAULT_SELECTED_DATA,
   EMISSIONS_COLUMN_NAMES,
+  GHG_FACTS,
   LABEL_COLUMN_NAMES,
 } from './consts';
 import SelectedDataContext from './stores/SelectedDataContext';
@@ -62,6 +63,7 @@ function App() {
           PATH_TO_DATA + DATAFILES.NAICS_LABELS,
           labelsColMapper,
         );
+        console.log(GHG_FACTS);
         setData({
           allEmissions: allEmissionsData,
           equivEmissions: equivCO2EmissionsData,
@@ -81,7 +83,6 @@ function App() {
     // data.allEmissions && console.log(data);
   }, [data]);
 
-  // TODO: fix position of gas facts
   return (
     <>
       <SelectedDataContext.Provider
@@ -105,14 +106,14 @@ function App() {
                 {selectedData.label ? selectedData.label : 'Sectors'}
               </h2>
             </div>
-            <div className="sidebar-item">
+            <div className="sidebar-item" id="stacked-chart">
               <StackedBarChart
                 data={data.equivEmissions}
                 ghgdata={data.allEmissions}
                 labels={data.naicsLabels}
               />
             </div>
-            <div className="sidebar-item" className="gas-facts">
+            <div className="sidebar-item" id="gas-facts">
               <GasFacts />
             </div>
           </div>

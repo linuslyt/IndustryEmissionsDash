@@ -22,6 +22,20 @@ export const LABEL_COLUMN_NAMES = {
 };
 
 // For react-select
+// https://github.com/JedWatson/react-select/issues/4201#issuecomment-874098561
+export const REACT_SELECT_STYLE = {
+  menu: (base) => ({
+    ...base,
+    width: 'max-content',
+    minWidth: '100%',
+    zIndex: 5,
+  }),
+  menuPortal: (base) => ({
+    ...base,
+    zIndex: 9999,
+  }),
+};
+
 export const SELECTED_EMISSIONS_DROPDOWN_OPTIONS = [
   {
     label: 'Total emissions',
@@ -45,11 +59,12 @@ export const DEFAULT_SELECTED_DATA = {
   column: '',
   pieRadius: 0,
   selectedEmissions: 'total',
+  selectedGas: 'Carbon dioxide',
 };
 
 export const GHGS = [
-  'HFC-23',
   'Carbon dioxide',
+  'HFC-23',
   'HFC-236fa',
   'Carbon tetrafluoride',
   'HFC-32',

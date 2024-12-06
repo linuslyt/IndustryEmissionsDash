@@ -19,6 +19,7 @@
     "@mui/icons-material": "^6.1.8",
     "@mui/material": "^6.1.8",
     "@react-hook/resize-observer": "^2.0.2",
+    "classnames": "^2.5.1",
     "d3": "^7.9.0",
     "lodash": "^4.17.21",
     "react": "^18.3.1",

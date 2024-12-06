@@ -86,7 +86,7 @@ const PieChart = ({ ghgdata }) => {
 
     console.log(filteredData);
     return finalData;
-  }, [ghgdata, selectedData]);
+  }, [ghgdata, selectedData.naics]);
 
   useEffect(() => {
     d3.select(svgRef.current).selectAll('*').remove();
@@ -185,6 +185,13 @@ const PieChart = ({ ghgdata }) => {
       .on('mouseout', function () {
         d3.select(this).transition().duration(200).style('opacity', 1);
         tooltip.transition().duration(50).style('opacity', 0);
+      })
+      .on('click', function (e, d) {
+        console.log('selected gas', d.data.ghg);
+        setSelectedData((prevData) => ({
+          ...prevData,
+          selectedGas: d.data.ghg,
+        }));
       });
 
     // legend

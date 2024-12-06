@@ -15,6 +15,7 @@ import SelectedDataContext from '../../stores/SelectedDataContext';
 
 import {
   DEFAULT_SELECTED_DATA,
+  REACT_SELECT_STYLE,
   SELECTED_EMISSIONS_DROPDOWN_OPTIONS,
 } from '../../consts';
 import PieChart from '../PieChart/PieChart';
@@ -284,20 +285,6 @@ function PackedBubbleChart({ data }) {
     return zoom;
   }, [svgRoot]);
 
-  // https://github.com/JedWatson/react-select/issues/4201#issuecomment-874098561
-  const reactSelectStyle = {
-    menu: (base) => ({
-      ...base,
-      width: 'max-content',
-      minWidth: '100%',
-      zIndex: 5,
-    }),
-    menuPortal: (base) => ({
-      ...base,
-      zIndex: 9999,
-    }),
-  };
-
   function handleReset() {
     svgRoot.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
     setSelectedData((prevState) => ({
@@ -336,7 +323,7 @@ function PackedBubbleChart({ data }) {
             }))
           }
           defaultValue={SELECTED_EMISSIONS_DROPDOWN_OPTIONS[0]}
-          styles={reactSelectStyle}
+          styles={REACT_SELECT_STYLE}
         />
         <Button
           variant="contained"

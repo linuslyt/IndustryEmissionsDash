@@ -44,6 +44,7 @@
   row-gap: 20px;
   background-color: darkgray;
   position: relative;
+  overflow: overlay;
 }
 
 .sidebar-item {
@@ -64,10 +65,8 @@
   justify-content: center;
 }
 
-.gas-facts {
-  position: absolute;
-  bottom: 0;
-  justify-self: center;
-  align-self: center;
-  margin-bottom: 5%;
+#gas-facts {
+  height: 33%;
+  width: 100%;
+  margin-top: auto;
 }
