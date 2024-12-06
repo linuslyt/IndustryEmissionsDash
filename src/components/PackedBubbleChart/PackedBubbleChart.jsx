@@ -323,49 +323,53 @@ function PackedBubbleChart({ data }) {
   }
 
   return (
-    <>
-      <Select
-        options={SELECTED_EMISSIONS_DROPDOWN_OPTIONS}
-        value={SELECTED_EMISSIONS_DROPDOWN_OPTIONS.label}
-        menuPortalTarget={document.body}
-        onChange={(e) =>
-          setSelectedData((prevState) => ({
-            ...prevState,
-            selectedEmissions: e.value,
-          }))
-        }
-        defaultValue={SELECTED_EMISSIONS_DROPDOWN_OPTIONS[0]}
-        styles={reactSelectStyle}
-      />
-      <Button
-        variant="contained"
-        onClick={handleReset}
-        style={{
-          whiteSpace: 'nowrap',
-          minWidth: 'auto',
-          textTransform: 'none',
-        }}
-      >
-        Back to root
-      </Button>
-      <Button
-        variant="contained"
-        disabled={!selectedBubble?.parent}
-        onClick={handleGoUp}
-        style={{
-          whiteSpace: 'nowrap',
-          minWidth: 'auto',
-          textTransform: 'none',
-        }}
-      >
-        Go to parent
-      </Button>
+    <div className="wrapper">
+      <div className="controls">
+        <Select
+          options={SELECTED_EMISSIONS_DROPDOWN_OPTIONS}
+          value={SELECTED_EMISSIONS_DROPDOWN_OPTIONS.label}
+          menuPortalTarget={document.body}
+          onChange={(e) =>
+            setSelectedData((prevState) => ({
+              ...prevState,
+              selectedEmissions: e.value,
+            }))
+          }
+          defaultValue={SELECTED_EMISSIONS_DROPDOWN_OPTIONS[0]}
+          styles={reactSelectStyle}
+        />
+        <Button
+          variant="contained"
+          onClick={handleReset}
+          className="button"
+          style={{
+            whiteSpace: 'nowrap',
+            minWidth: 'auto',
+            textTransform: 'none',
+          }}
+        >
+          Back to root
+        </Button>
+        <Button
+          variant="contained"
+          className="button"
+          disabled={!selectedBubble?.parent}
+          onClick={handleGoUp}
+          style={{
+            whiteSpace: 'nowrap',
+            minWidth: 'auto',
+            textTransform: 'none',
+          }}
+        >
+          Go to parent
+        </Button>
+      </div>
       <div ref={graphRef} className="main-container">
         <PieChart ghgdata={data.allEmissions} />
         <div id="tooltip"></div>
         <svg id="packed-bubble-chart" className="chart-container" />
       </div>
-    </>
+    </div>
   );
 }
 
