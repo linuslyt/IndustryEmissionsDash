@@ -8,9 +8,7 @@ const GasFacts = () => {
       <p className="card-subtitle">Serves the baseline GWP of 1</p>
       <div className="diagram-section">
         <div className="diagram-center">
-          <span>
-            CO<sub>2</sub>
-          </span>
+          <img src="images\co2.png" alt="Gas Icon" />
         </div>
       </div>
       <div className="info-section">
@@ -33,7 +31,7 @@ const GasFacts = () => {
         <div className="info-box">
           <h2>Useful info</h2>
           <div className="info-row">
-            <div className="info-label">Major contributing sector</div>
+            <div className="info-label">Common sources</div>
             <div className="info-value">Agriculture</div>
           </div>
           <div className="info-row">
