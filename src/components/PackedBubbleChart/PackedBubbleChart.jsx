@@ -292,6 +292,7 @@ function PackedBubbleChart({ data }) {
     setSelectedData((prevState) => ({
       ...DEFAULT_SELECTED_DATA,
       selectedEmissions: prevState.selectedEmissions,
+      selectedGas: prevState.selectedGas,
     }));
     setSelectedBubble(hierarchyData);
   }
