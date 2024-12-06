@@ -14,7 +14,6 @@ import SelectedDataContext from '../../stores/SelectedDataContext';
 
 // get x, y, r from selected Bubble. pass as prop.
 // get total vs base emission from select. pass as prop.
-// TODO: add title
 // TODO: update on resize without rerendering entire chart/resetting zoom/pan. https://stackoverflow.com/questions/39735367/d3-zoom-behavior-when-window-is-resized
 
 const PieChart = ({ ghgdata }) => {
@@ -109,7 +108,7 @@ const PieChart = ({ ghgdata }) => {
     const legendGroup = d3
       .select(svgRef.current)
       .append('g')
-      .attr('transform', `translate(${width * 0.88}, ${height * 0.8})`)
+      .attr('transform', `translate(${width * 0.82}, ${height * 0.8})`)
       .style('opacity', 0);
 
     legendGroup
@@ -242,7 +241,7 @@ const PieChart = ({ ghgdata }) => {
         position: 'absolute',
         top: 0,
         left: 0,
-        zIndex: 999,
+        zIndex: 99,
         pointerEvents: 'none',
       }}
     >

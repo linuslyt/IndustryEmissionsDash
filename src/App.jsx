@@ -5,6 +5,7 @@ import GasFacts from './components/GasFacts/GasFacts';
 import PackedBubbleChart from './components/PackedBubbleChart/PackedBubbleChart';
 import StackedBarChart from './components/StackedBarChart/StackedBarChart';
 import {
+  COLUMN_TO_CHART_LABEL,
   DATAFILES,
   DEFAULT_SELECTED_DATA,
   EMISSIONS_COLUMN_NAMES,
@@ -22,7 +23,7 @@ function App() {
 
   const [selectedData, setSelectedData] = useState(DEFAULT_SELECTED_DATA);
 
-  // TODO: style, replace placeholder title
+  // TODO: finalize colors
   useEffect(() => {
     const readCSV = async () => {
       const emissionsColMapper = (r) => {
@@ -93,27 +94,28 @@ function App() {
       >
         <div className="root-grid">
           <div className="header">
-            <h1>Header ribbon</h1>
+            Greenhouse Gas Emissions by NAICS-6 classification
           </div>
           <div className="main-grid">
             <PackedBubbleChart data={data} />
             {/* <PieChart ghgdata={data.allEmissions} /> The chart only shows for 'Soybean Farming using the code' */}
           </div>
           <div className="sidebar-grid">
-            <div className="sidebar-item">
-              <h2>
-                Gas Emissions in{' '}
-                {selectedData.label ? selectedData.label : 'Sectors'}
-              </h2>
-            </div>
+            {/* <div className="sidebar-item">Test content</div> */}
+            <div className="sidebar-heading"></div>
             <div className="sidebar-item" id="stacked-chart">
+              <h3>
+                {selectedData.column
+                  ? `${selectedData.label} Emissions by ${selectedData.terminalNode ? 'Gas' : COLUMN_TO_CHART_LABEL.get(selectedData.column)}`
+                  : `Total Emissions by Sector`}
+              </h3>
               <StackedBarChart
                 data={data.equivEmissions}
                 ghgdata={data.allEmissions}
                 labels={data.naicsLabels}
               />
             </div>
-            <div className="sidebar-item" id="gas-facts">
+            <div id="gas-facts">
               <GasFacts />
             </div>
           </div>

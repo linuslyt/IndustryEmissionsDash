@@ -2,7 +2,7 @@
   display: grid;
   /* Changed from four equal columns to three 20% and one 40% */
   grid-template-columns: 20% 20% 25% 35%;
-  grid-template-rows: 100px auto;
+  grid-template-rows: 5% auto;
   grid-template-areas:
     'hd hd hd hd'
     'mn mn mn sd';
@@ -15,7 +15,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
+  font-size: 3vh;
+  font-weight: bold;
+  height: 100%;
+  line-height: 100%;
   background-color: lightseagreen;
 }
 
@@ -34,22 +37,36 @@
 }
 
 .sidebar-grid {
-  padding: 20px;
+  padding: 4%;
   height: 100%;
   width: 100%;
   display: flex;
   flex-direction: column;
   grid-area: sd;
   grid-template-rows: 100px repeat(3, 1fr);
-  row-gap: 20px;
-  background-color: darkgray;
+  background-color: lightgrey;
   position: relative;
   overflow: overlay;
 }
 
 .sidebar-item {
-  padding: 10px;
   /* height: 100%; */
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: start;
+  flex-direction: column;
+}
+
+h3 {
+  padding: 0px;
+  margin: 0px;
+  margin-bottom: 0.5em;
+}
+
+.sidebar-heading {
+  height: fit-content;
   width: 100%;
   display: flex;
   align-items: center;
@@ -57,17 +74,11 @@
   text-align: center;
 }
 
-.sidebar-heading {
-  height: 50%;
-  width: 100%;
-  line-height: 0%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+#stacked-chart {
 }
 
 #gas-facts {
-  height: 33%;
-  width: 100%;
   margin-top: auto;
+  height: 40%;
+  width: 100%;
 }

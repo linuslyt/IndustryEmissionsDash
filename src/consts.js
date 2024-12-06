@@ -21,6 +21,16 @@ export const LABEL_COLUMN_NAMES = {
   TITLE: '2017 NAICS US Title',
 };
 
+export const COLUMN_TO_CHART_LABEL = new Map(
+  Object.entries({
+    naics: 'Gas',
+    sector: 'Subsector',
+    subsector: 'Industry Group',
+    indGroup: 'Industry',
+    industry: 'National Industry',
+  }),
+);
+
 // For react-select
 // https://github.com/JedWatson/react-select/issues/4201#issuecomment-874098561
 export const REACT_SELECT_STYLE = {
