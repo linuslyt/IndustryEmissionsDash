@@ -107,11 +107,18 @@ function App() {
             {/* <PieChart ghgdata={data.allEmissions}/> The chart only shows for 'Soybean Farming using the code' */}
           </div>
           <div className="sidebar-grid">
-            <div className="sidebar-heading">
-              <h2>Gas Emissions by Sector</h2>
+            <div className="sidebar-item">
+              <h2>
+                Gas Emissions in{' '}
+                {selectedData.label ? selectedData.label : 'Sectors'}
+              </h2>
             </div>
             <div className="sidebar-item">
-              <StackedBarChart data={data.equivEmissions} />
+              <StackedBarChart
+                data={data.equivEmissions}
+                ghgdata={data.allEmissions}
+                labels={data.naicsLabels}
+              />
             </div>
             <div className="sidebar-item">
               <GasFacts />
